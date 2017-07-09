@@ -18,7 +18,6 @@ package org.gradle.composite.internal;
 
 import org.gradle.StartParameter;
 import org.gradle.api.internal.artifacts.ImmutableModuleIdentifierFactory;
-import org.gradle.api.internal.artifacts.ivyservice.projectmodule.ProjectArtifactBuilder;
 import org.gradle.api.internal.composite.CompositeBuildContext;
 import org.gradle.api.internal.tasks.TaskReferenceResolver;
 import org.gradle.initialization.BuildIdentity;
@@ -73,10 +72,6 @@ public class CompositeBuildServices extends AbstractPluginServiceRegistry {
         public IncludedBuildTaskGraph createIncludedBuildTaskGraph(IncludedBuildControllers controllers) {
             return new DefaultIncludedBuildTaskGraph(controllers);
         }
-
-        public IncludedBuildArtifactBuilder createIncludedBuildArtifactBuilder(IncludedBuildTaskGraph includedBuildTaskGraph) {
-            return new IncludedBuildArtifactBuilder(includedBuildTaskGraph);
-        }
     }
 
     private static class CompositeBuildBuildScopeServices {
@@ -86,10 +81,6 @@ public class CompositeBuildServices extends AbstractPluginServiceRegistry {
 
         public TaskReferenceResolver createResolver(IncludedBuildTaskGraph includedBuilds, BuildIdentity buildIdentity) {
             return new IncludedBuildTaskReferenceResolver(includedBuilds, buildIdentity);
-        }
-
-        public ProjectArtifactBuilder createProjectArtifactBuilder(IncludedBuildArtifactBuilder builder, BuildIdentity buildIdentity) {
-            return new CompositeProjectArtifactBuilder(builder, buildIdentity);
         }
     }
 
