@@ -31,6 +31,7 @@ import org.gradle.internal.composite.CompositeContextBuilder;
 import org.gradle.internal.concurrent.ExecutorFactory;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.service.ServiceRegistration;
+import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.internal.service.scopes.AbstractPluginServiceRegistry;
 import org.gradle.internal.work.WorkerLeaseService;
 
@@ -73,10 +74,6 @@ public class CompositeBuildServices extends AbstractPluginServiceRegistry {
         public IncludedBuildTaskGraph createIncludedBuildTaskGraph(IncludedBuildControllers controllers) {
             return new DefaultIncludedBuildTaskGraph(controllers);
         }
-
-        public IncludedBuildArtifactBuilder createIncludedBuildArtifactBuilder(IncludedBuildTaskGraph includedBuildTaskGraph) {
-            return new DefaultIncludedBuildArtifactBuilder(includedBuildTaskGraph);
-        }
     }
 
     private static class CompositeBuildBuildScopeServices {
@@ -86,6 +83,10 @@ public class CompositeBuildServices extends AbstractPluginServiceRegistry {
 
         public TaskReferenceResolver createResolver(IncludedBuildTaskGraph includedBuilds, BuildIdentity buildIdentity) {
             return new IncludedBuildTaskReferenceResolver(includedBuilds, buildIdentity);
+        }
+
+        public IncludedBuildArtifactBuilder createIncludedBuildArtifactBuilder(IncludedBuildTaskGraph includedBuildTaskGraph, ServiceRegistry serviceRegistry) {
+            return new DefaultIncludedBuildArtifactBuilder(includedBuildTaskGraph, serviceRegistry);
         }
     }
 
