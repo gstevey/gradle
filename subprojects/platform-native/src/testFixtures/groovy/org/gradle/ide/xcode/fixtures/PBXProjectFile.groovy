@@ -69,11 +69,12 @@ class PBXProjectFile {
                 }
                 return list
             }
-            return value
+            return value.toJavaObject()
         }
 
         private static boolean isId(NSObject obj) {
-            return obj instanceof NSString && obj.getContent().length() == 24
+            // Check if the value is a FB generated id (static 24 chars) or Gradle generated id (static 36 chars - uuid)
+            return obj instanceof NSString && (obj.getContent().length() == 24 || obj.getContent().length() == 36)
         }
     }
 }

@@ -153,7 +153,7 @@ public class XcodePlugin extends IdePlugin {
         sourceTree.include("**/*.swift");
         xcode.getProject().source(sourceTree);
 
-        xcode.getProject().getTargets().add(newIndexingTarget("[INDEXING ONLY] " + project.getPath() + " Executable", sourceTree.getFiles()));
+        xcode.getProject().getTargets().add(newIndexingTarget("[INDEXING ONLY] " + project.getPath() + " Executable", sourceTree.getFiles(), project.getName()));
 
         AbstractXcodeTarget target = newGradleTarget(project.getPath() + " Executable", toGradleCommand(project.getRootProject()), project.getPath() + "linkMain", project.file("build/exe/" + project.getName()));
         xcode.getProject().getTargets().add(target);
@@ -181,12 +181,12 @@ public class XcodePlugin extends IdePlugin {
         return target;
     }
 
-    private static XcodeTarget newIndexingTarget(String name, Set<File> sources) {
+    private static XcodeTarget newIndexingTarget(String name, Set<File> sources, String productName) {
         DefaultXcodeSwiftIndexingTarget target = new DefaultXcodeSwiftIndexingTarget(name);
         target.setSources(sources);
         target.setOutputFileType(XcodeTarget.FileType.COMPILED_MACH_O_EXECUTABLE);
         target.setProductType(PBXTarget.ProductType.TOOL);
-        target.setProductName(name);
+        target.setProductName(productName);
         return target;
     }
 

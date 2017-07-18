@@ -16,13 +16,15 @@
 
 package org.gradle.ide.xcode
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget
 import org.gradle.ide.xcode.fixtures.XcodeProjectPackage
 import org.gradle.integtests.fixtures.AbstractIntegrationSpec
 import org.gradle.nativeplatform.fixtures.app.SwiftHelloWorldApp
 
 class XcodeSingleProjectIntegrationTest extends AbstractIntegrationSpec {
+    private static final String PROJECT_NAME = "app"
 
-    def "test"() {
+    def "create xcode project Swift executable"() {
         given:
         buildFile << """
 apply plugin: 'swift-executable'
@@ -30,7 +32,7 @@ apply plugin: 'xcode'
 """
 
         settingsFile << """
-rootProject.name = "app"
+rootProject.name = "${PROJECT_NAME}"
 """
 
         def app = new SwiftHelloWorldApp()
@@ -39,13 +41,39 @@ rootProject.name = "app"
         when:
         succeeds("xcode")
 
-        then:
-        executedAndNotSkipped(":xcodeProject", ":xcodeScheme", ":xcodeWorkspaceSettings", ":xcode")
-        xcodeProject("app.xcodeproj").projectFile.mainGroup.children.size() == 5
+        then: 'tasks are executed as expected'
+        executedAndNotSkipped(":xcodeProject", ":xcodeScheme: Executable", ":xcodeWorkspaceSettings", ":xcode")
+        def project = xcodeProject("${PROJECT_NAME}.xcodeproj").projectFile
 
+        and: 'source files are properly attached to the project'
+        project.mainGroup.children.size() == app.sourceFiles.size() + 2
+        project.mainGroup.children*.name == ['Products', 'build.gradle', 'hello.swift', 'main.swift', 'sum.swift']
+
+        and: 'targets are properly created'
+        project.targets.size() == 2
+        project.targets*.productType == [PBXTarget.ProductType.TOOL.identifier] * 2
+        project.targets*.productName == [PROJECT_NAME] * 2
+
+        def gradleTargets = project.targets.findAll(gradleTargets())
+        gradleTargets.size() == 1
+
+        def indexTargets = project.targets.findAll(indexTargets())
+        indexTargets.size() == 1
     }
 
     private XcodeProjectPackage xcodeProject(String path) {
         new XcodeProjectPackage(file(path))
+    }
+
+    private static def gradleTargets() {
+        return {
+            it.isa == 'PBXLegacyTarget'
+        }
+    }
+
+    private static def indexTargets() {
+        return {
+            it.isa == 'PBXNativeTarget'
+        }
     }
 }

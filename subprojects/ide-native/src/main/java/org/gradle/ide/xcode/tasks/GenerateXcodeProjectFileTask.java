@@ -130,6 +130,7 @@ public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<Xcod
         }
 
         PBXNativeTarget target = new PBXNativeTarget(xcodeTarget.getName(), xcodeTarget.getProductType());
+        target.setProductName(xcodeTarget.getProductName());
 
         NSDictionary buildSettings = new NSDictionary();
         buildSettings.put("SWIFT_VERSION", "3.0");  // TODO - Choose the right version for swift
