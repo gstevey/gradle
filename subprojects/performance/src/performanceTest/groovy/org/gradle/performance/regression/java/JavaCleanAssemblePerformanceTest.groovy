@@ -21,6 +21,7 @@ import spock.lang.Unroll
 
 import static org.gradle.performance.generator.JavaTestProject.LARGE_MONOLITHIC_JAVA_PROJECT
 import static org.gradle.performance.generator.JavaTestProject.LARGE_JAVA_MULTI_PROJECT
+import static org.gradle.performance.generator.JavaTestProject.MEDIUM_JAVA_COMPOSITE_BUILD
 
 class JavaCleanAssemblePerformanceTest extends AbstractCrossVersionPerformanceTest {
 
@@ -44,5 +45,6 @@ class JavaCleanAssemblePerformanceTest extends AbstractCrossVersionPerformanceTe
         testProject                   | warmUpRuns | runs
         LARGE_MONOLITHIC_JAVA_PROJECT | 2          | 6
         LARGE_JAVA_MULTI_PROJECT      | 2          | 6
+        MEDIUM_JAVA_COMPOSITE_BUILD   | 2          | 6
     }
 }
