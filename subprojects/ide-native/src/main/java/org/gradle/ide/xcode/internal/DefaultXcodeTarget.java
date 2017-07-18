@@ -16,9 +16,7 @@
 
 package org.gradle.ide.xcode.internal;
 
-import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import org.gradle.ide.xcode.XcodeTarget;
 import org.gradle.internal.id.UUIDGenerator;
 
 import java.io.File;

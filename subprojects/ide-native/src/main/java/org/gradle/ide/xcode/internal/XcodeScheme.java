@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.gradle.ide.xcode;
+package org.gradle.ide.xcode.internal;
 
 import org.gradle.api.Incubating;
 import org.gradle.api.Named;
+import org.gradle.ide.xcode.internal.XcodeTarget;
 
 import java.util.EnumSet;
 import java.util.List;

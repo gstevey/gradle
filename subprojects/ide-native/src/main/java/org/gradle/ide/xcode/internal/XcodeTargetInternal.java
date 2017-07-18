@@ -17,7 +17,6 @@
 package org.gradle.ide.xcode.internal;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import org.gradle.ide.xcode.XcodeTarget;
 
 public interface XcodeTargetInternal extends XcodeTarget {
     // TODO - move to PBXTarget, not done yet as it's Buck code

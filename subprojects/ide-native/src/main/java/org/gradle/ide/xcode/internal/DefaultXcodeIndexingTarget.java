@@ -16,9 +16,6 @@
 
 package org.gradle.ide.xcode.internal;
 
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import org.gradle.ide.xcode.XcodeIndexingTarget;
-
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;

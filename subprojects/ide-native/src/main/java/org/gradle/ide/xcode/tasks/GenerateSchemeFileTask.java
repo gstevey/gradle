@@ -17,7 +17,7 @@
 package org.gradle.ide.xcode.tasks;
 
 import org.gradle.api.Action;
-import org.gradle.ide.xcode.XcodeScheme;
+import org.gradle.ide.xcode.internal.XcodeScheme;
 import org.gradle.ide.xcode.internal.DefaultXcodeScheme;
 import org.gradle.ide.xcode.internal.DefaultXcodeTarget;
 import org.gradle.ide.xcode.tasks.internal.XcodeSchemeFile;

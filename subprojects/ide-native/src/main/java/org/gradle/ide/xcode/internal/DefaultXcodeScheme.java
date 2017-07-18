@@ -16,8 +16,6 @@
 
 package org.gradle.ide.xcode.internal;
 
-import org.gradle.ide.xcode.XcodeScheme;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;

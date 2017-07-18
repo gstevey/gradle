@@ -16,8 +16,6 @@
 
 package org.gradle.ide.xcode.internal;
 
-import org.gradle.ide.xcode.XcodeGradleTarget;
-
 public class DefaultXcodeGradleTarget extends DefaultXcodeTarget implements XcodeGradleTarget {
     private String taskName;
     private String gradleCommand;

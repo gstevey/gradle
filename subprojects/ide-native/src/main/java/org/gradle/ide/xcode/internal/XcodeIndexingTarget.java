@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.gradle.ide.xcode;
+package org.gradle.ide.xcode.internal;
 
 import java.io.File;
 import java.util.Set;

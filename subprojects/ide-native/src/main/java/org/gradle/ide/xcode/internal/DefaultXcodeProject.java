@@ -22,8 +22,6 @@ import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.internal.DefaultPolymorphicDomainObjectContainer;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.ide.xcode.XcodeProject;
-import org.gradle.ide.xcode.XcodeScheme;
-import org.gradle.ide.xcode.XcodeTarget;
 import org.gradle.internal.reflect.Instantiator;
 
 import javax.inject.Inject;
@@ -70,12 +68,10 @@ public class DefaultXcodeProject implements XcodeProject {
         this.location = location;
     }
 
-    @Override
     public List<XcodeTarget> getTargets() {
         return targets;
     }
 
-    @Override
     public NamedDomainObjectContainer<XcodeScheme> getSchemes() {
         return schemes;
     }

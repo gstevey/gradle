@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package org.gradle.ide.xcode;
+package org.gradle.ide.xcode.internal;
 
-public interface XcodeGradleTarget extends XcodeTarget {
-    String getTaskName();
-    void setTaskName(String taskName);
+import org.gradle.api.Named;
 
-    String getGradleCommand();
-    void setGradleCommand(String gradleCommand);
+import java.io.File;
+
+public interface XcodeTarget extends Named {
+    File getOutputFile();
+    void setOutputFile(File outputFile);
 }

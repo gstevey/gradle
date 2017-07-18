@@ -30,24 +30,20 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.google.common.base.Optional;
 import org.gradle.api.Action;
-import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.ide.xcode.XcodeGradleTarget;
-import org.gradle.ide.xcode.XcodeIndexingTarget;
+import org.gradle.ide.xcode.internal.XcodeGradleTarget;
+import org.gradle.ide.xcode.internal.XcodeIndexingTarget;
 import org.gradle.ide.xcode.XcodeProject;
-import org.gradle.ide.xcode.XcodeTarget;
+import org.gradle.ide.xcode.internal.XcodeTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeGradleTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeIndexingTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeProject;
-import org.gradle.ide.xcode.internal.DefaultXcodeTarget;
 import org.gradle.ide.xcode.internal.XcodeTargetInternal;
 import org.gradle.ide.xcode.tasks.internal.XcodeProjectFile;
 import org.gradle.plugins.ide.api.PropertyListGeneratorTask;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<XcodeProjectFile> {

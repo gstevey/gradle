@@ -17,7 +17,7 @@
 package org.gradle.ide.xcode.tasks;
 
 import org.gradle.api.Incubating;
-import org.gradle.ide.xcode.XcodeScheme;
+import org.gradle.ide.xcode.internal.XcodeScheme;
 import org.gradle.ide.xcode.tasks.internal.XcodeSchemeManagementFile;
 import org.gradle.plugins.ide.api.PropertyListGeneratorTask;
 

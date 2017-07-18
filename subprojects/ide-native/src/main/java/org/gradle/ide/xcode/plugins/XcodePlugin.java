@@ -25,10 +25,8 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileVar;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.tasks.Delete;
-import org.gradle.ide.xcode.XcodeExtension;
-import org.gradle.ide.xcode.XcodeIndexingTarget;
-import org.gradle.ide.xcode.XcodeScheme;
-import org.gradle.ide.xcode.XcodeTarget;
+import org.gradle.ide.xcode.internal.XcodeScheme;
+import org.gradle.ide.xcode.internal.XcodeTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeExtension;
 import org.gradle.ide.xcode.internal.DefaultXcodeGradleTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeIndexingTarget;
@@ -71,14 +69,8 @@ public class XcodePlugin extends IdePlugin {
         xcode = project.getExtensions().create("xcode", DefaultXcodeExtension.class, instantiator, fileResolver);
         xcode.getProject().setLocation(project.file(project.getName() + ".xcodeproj"));
 
-//        configureIdeaWorkspace(project);
         configureXcodeProject(project);
-//        configureIdeaModule(project);
         configureForSwiftPlugin(project);
-//        configureForWarPlugin(project);
-//        configureForScalaPlugin();
-//        registerImlArtifact(project);
-//        linkCompositeBuildDependencies((ProjectInternal) project);
 
         configureXcodeCleanTask(project);
     }
@@ -159,7 +151,7 @@ public class XcodePlugin extends IdePlugin {
 
         xcode.getProject().getTargets().add(newIndexingTarget("[INDEXING ONLY] " + project.getPath() + " Executable", sourceTree.getFiles()));
 
-        DefaultXcodeTarget target = newGradleTarget(project.getPath() + " Executable", toGradleCommand(project.getRootProject()), project.getPath() + "linkMain", project.file("build/exe/app"));
+        DefaultXcodeTarget target = newGradleTarget(project.getPath() + " Executable", toGradleCommand(project.getRootProject()), project.getPath() + "linkMain", project.file("build/exe/" + project.getName()));
         xcode.getProject().getTargets().add(target);
         xcode.getProject().getSchemes().add(newScheme(target));
     }
