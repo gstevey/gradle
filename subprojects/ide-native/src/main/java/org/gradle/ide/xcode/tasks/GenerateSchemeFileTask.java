@@ -17,21 +17,28 @@
 package org.gradle.ide.xcode.tasks;
 
 import org.gradle.api.Action;
-import org.gradle.ide.xcode.internal.XcodeScheme;
+import org.gradle.api.Incubating;
 import org.gradle.ide.xcode.internal.DefaultXcodeScheme;
-import org.gradle.ide.xcode.internal.DefaultXcodeTarget;
+import org.gradle.ide.xcode.internal.XcodeScheme;
+import org.gradle.ide.xcode.internal.XcodeTarget;
 import org.gradle.ide.xcode.tasks.internal.XcodeSchemeFile;
 import org.gradle.plugins.ide.api.XmlGeneratorTask;
 
+/**
+ * Task for generating a scheme file.
+ *
+ * @since 4.2
+ */
+@Incubating
 public class GenerateSchemeFileTask extends XmlGeneratorTask<XcodeSchemeFile> {
-    public DefaultXcodeScheme scheme;
+    public XcodeScheme scheme;
 
     public XcodeScheme getScheme() {
         return scheme;
     }
 
     public void setScheme(XcodeScheme scheme) {
-        this.scheme = (DefaultXcodeScheme) scheme;
+        this.scheme = scheme;
     }
 
     @Override
@@ -88,7 +95,7 @@ public class GenerateSchemeFileTask extends XmlGeneratorTask<XcodeSchemeFile> {
         return new XcodeSchemeFile(getXmlTransformer());
     }
 
-    private XcodeSchemeFile.BuildableReference toBuildableReference(DefaultXcodeTarget target) {
+    private XcodeSchemeFile.BuildableReference toBuildableReference(XcodeTarget target) {
         XcodeSchemeFile.BuildableReference buildableReference = new XcodeSchemeFile.BuildableReference();
         buildableReference.setBuildableIdentifier("primary");
         buildableReference.setBlueprintIdentifier(target.getId());

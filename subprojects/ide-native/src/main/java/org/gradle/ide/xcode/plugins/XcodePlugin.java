@@ -19,20 +19,20 @@ package org.gradle.ide.xcode.plugins;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.google.common.collect.Sets;
 import org.gradle.api.Action;
+import org.gradle.api.Incubating;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileVar;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.tasks.Delete;
-import org.gradle.ide.xcode.internal.XcodeScheme;
-import org.gradle.ide.xcode.internal.XcodeTarget;
+import org.gradle.ide.xcode.internal.AbstractXcodeTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeExtension;
 import org.gradle.ide.xcode.internal.DefaultXcodeGradleTarget;
-import org.gradle.ide.xcode.internal.DefaultXcodeIndexingTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeScheme;
-import org.gradle.ide.xcode.internal.DefaultXcodeTarget;
-import org.gradle.ide.xcode.internal.XcodeTargetInternal;
+import org.gradle.ide.xcode.internal.DefaultXcodeSwiftIndexingTarget;
+import org.gradle.ide.xcode.internal.XcodeScheme;
+import org.gradle.ide.xcode.internal.XcodeTarget;
 import org.gradle.ide.xcode.tasks.GenerateSchemeFileTask;
 import org.gradle.ide.xcode.tasks.GenerateWorkspaceSettingsFileTask;
 import org.gradle.ide.xcode.tasks.GenerateXcodeProjectFileTask;
@@ -45,6 +45,10 @@ import java.io.File;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+/**
+ * A plugin for creating a XCode project for a gradle project.
+ */
+@Incubating
 public class XcodePlugin extends IdePlugin {
     private final Instantiator instantiator;
     private final FileResolver fileResolver;
@@ -151,7 +155,7 @@ public class XcodePlugin extends IdePlugin {
 
         xcode.getProject().getTargets().add(newIndexingTarget("[INDEXING ONLY] " + project.getPath() + " Executable", sourceTree.getFiles()));
 
-        DefaultXcodeTarget target = newGradleTarget(project.getPath() + " Executable", toGradleCommand(project.getRootProject()), project.getPath() + "linkMain", project.file("build/exe/" + project.getName()));
+        AbstractXcodeTarget target = newGradleTarget(project.getPath() + " Executable", toGradleCommand(project.getRootProject()), project.getPath() + "linkMain", project.file("build/exe/" + project.getName()));
         xcode.getProject().getTargets().add(target);
         xcode.getProject().getSchemes().add(newScheme(target));
     }
@@ -165,12 +169,12 @@ public class XcodePlugin extends IdePlugin {
         }
     }
 
-    private static DefaultXcodeTarget newGradleTarget(String name, String gradleCommand, String taskName, File outputFile) {
+    private static AbstractXcodeTarget newGradleTarget(String name, String gradleCommand, String taskName, File outputFile) {
         DefaultXcodeGradleTarget target = new DefaultXcodeGradleTarget(name);
         target.setOutputFile(outputFile);
         target.setTaskName(taskName);
         target.setGradleCommand(gradleCommand);
-        target.setOutputFileType(XcodeTargetInternal.FileType.COMPILED_MACH_O_EXECUTABLE);
+        target.setOutputFileType(XcodeTarget.FileType.COMPILED_MACH_O_EXECUTABLE);
         target.setProductType(PBXTarget.ProductType.TOOL);
         target.setProductName(outputFile.getName());
 
@@ -178,15 +182,15 @@ public class XcodePlugin extends IdePlugin {
     }
 
     private static XcodeTarget newIndexingTarget(String name, Set<File> sources) {
-        DefaultXcodeIndexingTarget target = new DefaultXcodeIndexingTarget(name);
+        DefaultXcodeSwiftIndexingTarget target = new DefaultXcodeSwiftIndexingTarget(name);
         target.setSources(sources);
-        target.setOutputFileType(XcodeTargetInternal.FileType.COMPILED_MACH_O_EXECUTABLE);
+        target.setOutputFileType(XcodeTarget.FileType.COMPILED_MACH_O_EXECUTABLE);
         target.setProductType(PBXTarget.ProductType.TOOL);
         target.setProductName(name);
         return target;
     }
 
-    private static XcodeScheme newScheme(DefaultXcodeTarget target) {
+    private static XcodeScheme newScheme(AbstractXcodeTarget target) {
         XcodeScheme.BuildEntry entry = new DefaultXcodeScheme.DefaultBuildEntry(target, XcodeScheme.BuildEntry.BuildFor.DEFAULT);
 
         XcodeScheme scheme = new DefaultXcodeScheme(target.getName());

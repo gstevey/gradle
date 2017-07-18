@@ -72,16 +72,16 @@ public class DefaultXcodeScheme implements XcodeScheme {
     }
 
     public static class DefaultBuildEntry implements BuildEntry {
-        private final DefaultXcodeTarget target;
+        private final AbstractXcodeTarget target;
         private final EnumSet<BuildFor> buildFor;
 
-        public DefaultBuildEntry(DefaultXcodeTarget target, EnumSet<BuildFor> buildFor) {
+        public DefaultBuildEntry(AbstractXcodeTarget target, EnumSet<BuildFor> buildFor) {
             this.target = target;
             this.buildFor = buildFor;
         }
 
         @Override
-        public DefaultXcodeTarget getTarget() {
+        public XcodeTarget getTarget() {
             return target;
         }
 

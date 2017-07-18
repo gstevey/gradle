@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package org.gradle.ide.xcode.internal;
-
-import java.io.File;
-import java.util.Set;
-
-public interface XcodeIndexingTarget extends XcodeTarget {
-    Set<File> getSources();
-    void setSources(Set<File> sources);
-}
+/**
+ * Plugins for XCode integration.
+ *
+ * @since 4.2
+ */
+@org.gradle.api.Incubating
+package org.gradle.ide.xcode.plugins;

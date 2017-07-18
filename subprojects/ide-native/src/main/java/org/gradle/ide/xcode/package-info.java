@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package org.gradle.ide.xcode;
-
-import org.gradle.api.Incubating;
-
 /**
- * The configuration for mapping a C++ or Swift project to XCode IDE.
+ * Model classes for XCode.
  *
  * @since 4.2
  */
-@Incubating
-public interface XcodeExtension {
-    XcodeProject getProject();
-
-    // TODO - Handle workspace here
-}
+@org.gradle.api.Incubating
+package org.gradle.ide.xcode;

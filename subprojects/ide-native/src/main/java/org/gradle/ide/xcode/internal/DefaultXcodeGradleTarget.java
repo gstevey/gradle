@@ -16,7 +16,7 @@
 
 package org.gradle.ide.xcode.internal;
 
-public class DefaultXcodeGradleTarget extends DefaultXcodeTarget implements XcodeGradleTarget {
+public class DefaultXcodeGradleTarget extends AbstractXcodeTarget {
     private String taskName;
     private String gradleCommand;
 
@@ -24,22 +24,18 @@ public class DefaultXcodeGradleTarget extends DefaultXcodeTarget implements Xcod
         super(name);
     }
 
-    @Override
     public String getTaskName() {
         return taskName;
     }
 
-    @Override
     public void setTaskName(String taskName) {
         this.taskName = taskName;
     }
 
-    @Override
     public String getGradleCommand() {
         return gradleCommand;
     }
 
-    @Override
     public void setGradleCommand(String gradleCommand) {
         this.gradleCommand = gradleCommand;
     }

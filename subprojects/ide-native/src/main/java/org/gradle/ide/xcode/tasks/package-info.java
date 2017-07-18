@@ -14,29 +14,10 @@
  * limitations under the License.
  */
 
-package org.gradle.ide.xcode.internal;
-
-import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
- * Created by daniel on 2017-07-18.
+ * Task classes for XCode.
+ *
+ * @since 4.2
  */
-public class DefaultXcodeIndexingTarget extends DefaultXcodeTarget implements XcodeIndexingTarget {
-    private final Set<File> sources = new HashSet<File>();
-
-    public DefaultXcodeIndexingTarget(String name) {
-        super(name);
-    }
-
-    @Override
-    public Set<File> getSources() {
-        return sources;
-    }
-
-    @Override
-    public void setSources(Set<File> sources) {
-        this.sources.addAll(sources);
-    }
-}
+@org.gradle.api.Incubating
+package org.gradle.ide.xcode.tasks;

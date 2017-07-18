@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Task for generating a scheme management file.
+ *
  * @since 4.2
  */
 @Incubating

@@ -21,15 +21,16 @@ import org.gradle.internal.id.UUIDGenerator;
 
 import java.io.File;
 
-public abstract class DefaultXcodeTarget implements XcodeTargetInternal {
+public abstract class AbstractXcodeTarget implements XcodeTarget {
+    private static final UUIDGenerator ID_GENERATOR = new UUIDGenerator();
     private final String name;
-    private final String id = new UUIDGenerator().generateId().toString();
+    private final String id = ID_GENERATOR.generateId().toString();
     private File outputFile;
     private PBXTarget.ProductType productType;
     private String productName;
     private FileType outputFileType;
 
-    public DefaultXcodeTarget(String name) {
+    public AbstractXcodeTarget(String name) {
         this.name = name;
     }
 

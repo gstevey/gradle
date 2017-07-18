@@ -16,9 +16,35 @@
 
 package org.gradle.ide.xcode;
 
+import org.gradle.api.Incubating;
+
 import java.io.File;
 
+/**
+ * A xcode project, created from C++ or Swift capable project.
+ *
+ * <p/>
+ *
+ * The location of the generate project package can be modified by the supplied methods:
+ *
+ * <pre autoTested="true">
+ *  apply plugin: "xcode"
+ *  xcode {
+ *      project.location = "xcode/${name}.xcodeproj"
+ *  }
+ * </pre>
+ *
+ * @since 4.2
+ */
+@Incubating
 public interface XcodeProject {
+    /**
+     * The location where the project package will be generated.
+     */
     File getLocation();
+
+    /**
+     * Specify the location where the project package will be generated.
+     */
     void setLocation(File location);
 }

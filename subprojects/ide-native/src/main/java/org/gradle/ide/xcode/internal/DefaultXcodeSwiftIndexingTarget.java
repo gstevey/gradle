@@ -16,10 +16,22 @@
 
 package org.gradle.ide.xcode.internal;
 
-public interface XcodeGradleTarget extends XcodeTarget {
-    String getTaskName();
-    void setTaskName(String taskName);
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
-    String getGradleCommand();
-    void setGradleCommand(String gradleCommand);
+public class DefaultXcodeSwiftIndexingTarget extends AbstractXcodeTarget {
+    private final Set<File> sources = new HashSet<File>();
+
+    public DefaultXcodeSwiftIndexingTarget(String name) {
+        super(name);
+    }
+
+    public Set<File> getSources() {
+        return sources;
+    }
+
+    public void setSources(Set<File> sources) {
+        this.sources.addAll(sources);
+    }
 }

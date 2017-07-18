@@ -16,9 +16,16 @@
 
 package org.gradle.ide.xcode.tasks;
 
+import org.gradle.api.Incubating;
 import org.gradle.ide.xcode.tasks.internal.XcodeWorkspaceSettingsFile;
 import org.gradle.plugins.ide.api.PropertyListGeneratorTask;
 
+/**
+ * Task for generating a workspace settings file.
+ *
+ * @since 4.2
+ */
+@Incubating
 public class GenerateWorkspaceSettingsFileTask extends PropertyListGeneratorTask<XcodeWorkspaceSettingsFile> {
     private boolean autoCreateContextsIfNeeded;
 

@@ -16,6 +16,7 @@
 
 package org.gradle.ide.xcode.internal;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import org.gradle.api.Named;
 
 import java.io.File;
@@ -23,4 +24,30 @@ import java.io.File;
 public interface XcodeTarget extends Named {
     File getOutputFile();
     void setOutputFile(File outputFile);
+
+    // TODO - move to PBXTarget, not done yet as it's Buck code
+    enum FileType {
+        COMPILED_MACH_O_EXECUTABLE("compiled.mach-o.executable");
+
+        public final String identifier;
+        FileType(String identifier) {
+            this.identifier = identifier;
+        }
+
+        @Override
+        public String toString() {
+            return identifier;
+        }
+    }
+
+    PBXTarget.ProductType getProductType();
+    void setProductType(PBXTarget.ProductType productType);
+
+    String getProductName();
+    void setProductName(String productName);
+
+    FileType getOutputFileType();
+    void setOutputFileType(FileType outputFileType);
+
+    String getId();
 }

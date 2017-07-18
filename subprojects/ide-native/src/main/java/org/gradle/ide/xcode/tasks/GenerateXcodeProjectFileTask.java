@@ -30,14 +30,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.google.common.base.Optional;
 import org.gradle.api.Action;
-import org.gradle.ide.xcode.internal.XcodeGradleTarget;
-import org.gradle.ide.xcode.internal.XcodeIndexingTarget;
+import org.gradle.api.Incubating;
 import org.gradle.ide.xcode.XcodeProject;
-import org.gradle.ide.xcode.internal.XcodeTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeGradleTarget;
-import org.gradle.ide.xcode.internal.DefaultXcodeIndexingTarget;
 import org.gradle.ide.xcode.internal.DefaultXcodeProject;
-import org.gradle.ide.xcode.internal.XcodeTargetInternal;
+import org.gradle.ide.xcode.internal.DefaultXcodeSwiftIndexingTarget;
+import org.gradle.ide.xcode.internal.XcodeTarget;
 import org.gradle.ide.xcode.tasks.internal.XcodeProjectFile;
 import org.gradle.plugins.ide.api.PropertyListGeneratorTask;
 
@@ -46,11 +44,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Task for generating a project file.
+ *
+ * @since 4.2
+ */
+@Incubating
 public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<XcodeProjectFile> {
+    private static final String PRODUCTS_GROUP_NAME = "Products";
     private DefaultXcodeProject project;
     private Map<String, PBXFileReference> pathToFileReference = new HashMap<String, PBXFileReference>();
-
-    private static final String PRODUCTS_GROUP_NAME = "Products";
 
     @Override
     protected void configure(XcodeProjectFile projectFile) {
@@ -71,10 +74,9 @@ public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<Xcod
         for (XcodeTarget target : this.project.getTargets()) {
             project.getTargets().add(toPbxTarget(target));
 
-            if (target instanceof XcodeGradleTarget) {
-                XcodeTargetInternal targetInternal = (XcodeTargetInternal) target;
+            if (target instanceof DefaultXcodeGradleTarget) {
                 PBXFileReference fileReference = new PBXFileReference(target.getOutputFile().getName(), target.getOutputFile().getAbsolutePath(), PBXReference.SourceTree.ABSOLUTE);
-                fileReference.setExplicitFileType(Optional.of(targetInternal.getOutputFileType().identifier));
+                fileReference.setExplicitFileType(Optional.of(target.getOutputFileType().identifier));
                 project.getMainGroup().getOrCreateChildGroupByName(PRODUCTS_GROUP_NAME).getChildren().add(fileReference);
             }
         }
@@ -97,9 +99,9 @@ public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<Xcod
     }
 
     private PBXTarget toPbxTarget(XcodeTarget target) {
-        if (target instanceof XcodeIndexingTarget) {
-            return toPbxTarget((DefaultXcodeIndexingTarget) target);
-        } else if (target instanceof XcodeGradleTarget) {
+        if (target instanceof DefaultXcodeSwiftIndexingTarget) {
+            return toPbxTarget((DefaultXcodeSwiftIndexingTarget) target);
+        } else if (target instanceof DefaultXcodeGradleTarget) {
             return toPbxTarget((DefaultXcodeGradleTarget) target);
         }
 
@@ -120,7 +122,7 @@ public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<Xcod
         return target;
     }
 
-    private PBXTarget toPbxTarget(DefaultXcodeIndexingTarget xcodeTarget) {
+    private PBXTarget toPbxTarget(DefaultXcodeSwiftIndexingTarget xcodeTarget) {
         PBXSourcesBuildPhase buildPhase = new PBXSourcesBuildPhase();
         for (File file : xcodeTarget.getSources()) {
             PBXFileReference fileReference = pathToFileReference.get(file.getAbsolutePath());
