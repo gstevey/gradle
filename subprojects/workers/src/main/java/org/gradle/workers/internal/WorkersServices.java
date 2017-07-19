@@ -16,6 +16,7 @@
 
 package org.gradle.workers.internal;
 
+import org.gradle.api.internal.InstantiatorFactory;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.initialization.GradleUserHomeDirProvider;
 import org.gradle.internal.classloader.ClassLoaderFactory;
@@ -24,6 +25,7 @@ import org.gradle.internal.event.ListenerManager;
 import org.gradle.internal.logging.LoggingManagerInternal;
 import org.gradle.internal.operations.BuildOperationExecutor;
 import org.gradle.internal.reflect.Instantiator;
+import org.gradle.internal.service.DefaultServiceRegistry;
 import org.gradle.internal.service.ServiceRegistration;
 import org.gradle.internal.service.scopes.AbstractPluginServiceRegistry;
 import org.gradle.internal.work.AsyncWorkTracker;
@@ -51,21 +53,27 @@ public class WorkersServices extends AbstractPluginServiceRegistry {
             return new WorkerDaemonFactory(workerDaemonClientsManager, memoryManager, workerLeaseRegistry, buildOperationExecutor);
         }
 
-        WorkerExecutor createWorkerExecutor(Instantiator instantiator, WorkerDaemonFactory daemonWorkerFactory, IsolatedClassloaderWorkerFactory isolatedClassloaderWorkerFactory, NoIsolationWorkerFactory noIsolationWorkerFactory, FileResolver fileResolver, ExecutorFactory executorFactory, WorkerLeaseRegistry workerLeaseRegistry, BuildOperationExecutor buildOperationExecutor, AsyncWorkTracker asyncWorkTracker, WorkerDirectoryProvider workerDirectoryProvider) {
-            return instantiator.newInstance(DefaultWorkerExecutor.class, daemonWorkerFactory, isolatedClassloaderWorkerFactory, noIsolationWorkerFactory, fileResolver, executorFactory, workerLeaseRegistry, buildOperationExecutor, asyncWorkTracker, workerDirectoryProvider);
+        WorkerExecutor createWorkerExecutor(Instantiator instantiator, WorkerDaemonFactory daemonWorkerFactory, IsolatedClassloaderWorkerFactory isolatedClassloaderWorkerFactory, NoIsolationWorkerFactory noIsolationWorkerFactory, FileResolver fileResolver, ExecutorFactory executorFactory, WorkerLeaseRegistry workerLeaseRegistry, BuildOperationExecutor buildOperationExecutor, AsyncWorkTracker asyncWorkTracker, WorkerDirectoryProvider workerDirectoryProvider, InstantiatorFactory instantiatorFactory) {
+            DefaultWorkerExecutor executor = instantiator.newInstance(DefaultWorkerExecutor.class, daemonWorkerFactory, isolatedClassloaderWorkerFactory, noIsolationWorkerFactory, fileResolver, executorFactory, workerLeaseRegistry, buildOperationExecutor, asyncWorkTracker, workerDirectoryProvider);
+            DefaultServiceRegistry serviceRegistry = new DefaultServiceRegistry();
+            serviceRegistry.add(WorkerExecutor.class, executor);
+            Instantiator workItemInstantiator = instantiatorFactory.inject(serviceRegistry);
+            noIsolationWorkerFactory.setInstantiator(workItemInstantiator);
+            return executor;
         }
 
         IsolatedClassloaderWorkerFactory createIsolatedClassloaderWorkerFactory(ClassLoaderFactory classLoaderFactory, WorkerLeaseRegistry workerLeaseRegistry, BuildOperationExecutor buildOperationExecutor) {
             return new IsolatedClassloaderWorkerFactory(classLoaderFactory, workerLeaseRegistry, buildOperationExecutor);
         }
 
-        NoIsolationWorkerFactory createNoIsolationWorkerFactory(WorkerLeaseRegistry workerLeaseRegistry, BuildOperationExecutor buildOperationExecutor) {
-            return new NoIsolationWorkerFactory(workerLeaseRegistry, buildOperationExecutor);
+        NoIsolationWorkerFactory createNoIsolationWorkerFactory(WorkerLeaseRegistry workerLeaseRegistry, BuildOperationExecutor buildOperationExecutor, AsyncWorkTracker workTracker) {
+            return new NoIsolationWorkerFactory(workerLeaseRegistry, buildOperationExecutor, workTracker);
         }
 
         WorkerDirectoryProvider createWorkerDirectoryProvider(GradleUserHomeDirProvider gradleUserHomeDirProvider) {
             return new DefaultWorkerDirectoryProvider(gradleUserHomeDirProvider);
         }
+
     }
 
     private static class GradleUserHomeServices {
