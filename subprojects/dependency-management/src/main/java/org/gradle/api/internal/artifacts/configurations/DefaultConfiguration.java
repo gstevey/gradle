@@ -481,7 +481,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
 
             @Override
             public BuildOperationDescriptor.Builder description() {
-                return BuildOperationDescriptor.displayName("Resolve dependencies of " + identityPath).progressDisplayName("Resolve dependencies " + identityPath);
+                return BuildOperationDescriptor.displayName("Resolve dependencies of " + identityPath).progressDisplayName("Resolving dependencies " + identityPath);
             }
         });
     }

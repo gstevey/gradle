@@ -238,7 +238,7 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
                 String displayName = "Resolve files of " + configuration.getIdentityPath();
                 return BuildOperationDescriptor
                     .displayName(displayName)
-                    .progressDisplayName(displayName)
+                    .progressDisplayName("Resolving files of " + configuration.getIdentityPath())
                     .details(new ResolveArtifactsBuildOperationType.DetailsImpl(configuration.getPath()));
             }
         });
