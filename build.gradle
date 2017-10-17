@@ -193,8 +193,7 @@ allprojects {
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
         maven { url 'https://repo.gradle.org/gradle/libs-milestones' }
         maven { url "https://repo.gradle.org/gradle/libs-snapshots" }
-        //TODO remove this when incap can be published to a repo
-        mavenLocal()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     }
 
     // patchExternalModules lives in the root project - we need to activate normalization there, too.
