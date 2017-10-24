@@ -1306,7 +1306,7 @@ class DefaultConfigurationSpec extends Specification {
         conf.dependencies.add(Mock(Dependency))
 
         when:
-        conf.triggerWhenEmptyActionsIfNecessary()
+        conf.runDependencyActions()
 
         then:
         0 * _
@@ -1320,7 +1320,7 @@ class DefaultConfigurationSpec extends Specification {
         conf.defaultDependencies defaultDependencyAction2
 
         when:
-        conf.triggerWhenEmptyActionsIfNecessary()
+        conf.runDependencyActions()
 
         then:
         1 * defaultDependencyAction1.execute(conf.dependencies) >> {
@@ -1339,31 +1339,37 @@ class DefaultConfigurationSpec extends Specification {
         conf.defaultDependencies defaultDependencyAction
 
         when:
-        conf.triggerWhenEmptyActionsIfNecessary()
+        conf.runDependencyActions()
 
         then:
         1 * defaultDependencyAction.execute(conf.dependencies)
         0 * _
     }
 
-    def "defaultDependencies action is called on self first, then on parent"() {
+    def "dependency actions are called on self first, then on parent"() {
         def parentWhenEmptyAction = Mock(Action)
+        def parentMutation = Mock(Action)
         def parent = conf("parent", ":parent")
         parent.defaultDependencies parentWhenEmptyAction
+        parent.withDependencies parentMutation
 
         def conf = conf("conf")
         def defaultDependencyAction = Mock(Action)
+        def mutation = Mock(Action)
         conf.extendsFrom parent
         conf.defaultDependencies defaultDependencyAction
+        conf.withDependencies mutation
 
         when:
-        conf.triggerWhenEmptyActionsIfNecessary()
+        conf.runDependencyActions()
 
         then:
         1 * defaultDependencyAction.execute(conf.dependencies)
+        1 * mutation.execute(conf.dependencies)
 
         then:
         1 * parentWhenEmptyAction.execute(parent.dependencies)
+        1 * parentMutation.execute(conf.dependencies)
         0 * _
     }
 

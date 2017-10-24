@@ -25,13 +25,13 @@ import spock.lang.Specification
 
 abstract class AbstractModuleDependencySpec extends Specification {
 
-    private dependency = createDependency("org.gradle", "gradle-core", "4.4-beta2")
+    private ExternalModuleDependency dependency
 
-    def init() {
+    def setup() {
         dependency = createDependency("org.gradle", "gradle-core", "4.4-beta2")
     }
 
-    protected createDependency(String group, String name, String version) {
+    protected ExternalModuleDependency createDependency(String group, String name, String version) {
         createDependency(group, name, version, null)
     }
 
@@ -99,6 +99,13 @@ abstract class AbstractModuleDependencySpec extends Specification {
     def "creates deep copy"() {
         when:
         def copy = dependency.copy()
+
+        then:
+        assertDeepCopy(dependency, copy)
+
+        when:
+        dependency.transitive = false
+        copy = dependency.copy()
 
         then:
         assertDeepCopy(dependency, copy)

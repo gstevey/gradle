@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal.artifacts.ivyservice.ivyresolve.parser;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import org.gradle.api.Transformer;
@@ -35,8 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.google.gson.stream.JsonToken.END_ARRAY;
-import static com.google.gson.stream.JsonToken.END_OBJECT;
+import static com.google.gson.stream.JsonToken.*;
 
 public class ModuleMetadataParser {
     public static final String FORMAT_VERSION = "0.2";
@@ -113,6 +113,10 @@ public class ModuleMetadataParser {
                 files = consumeFiles(reader);
             } else if (name.equals("dependencies")) {
                 dependencies = consumeDependencies(reader);
+            } else if (name.equals("available-at")) {
+                // For now just collect this as another dependency
+                // TODO - collect this information and merge the metadata from the other module
+                dependencies = consumeVariantLocation(reader);
             } else {
                 consumeAny(reader);
             }
@@ -126,6 +130,27 @@ public class ModuleMetadataParser {
         for (ModuleDependency dependency : dependencies) {
             variant.addDependency(dependency.group, dependency.module, dependency.version);
         }
+    }
+
+    private List<ModuleDependency> consumeVariantLocation(JsonReader reader) throws IOException {
+        String group = null;
+        String module = null;
+        String version = null;
+        reader.beginObject();
+        while (reader.peek() != END_OBJECT) {
+            String name = reader.nextName();
+            if (name.equals("group")) {
+                group = reader.nextString();
+            } else if (name.equals("module")) {
+                module = reader.nextString();
+            } else if (name.equals("version")) {
+                version = reader.nextString();
+            } else {
+                consumeAny(reader);
+            }
+        }
+        reader.endObject();
+        return ImmutableList.of(new ModuleDependency(group, module, version));
     }
 
     private List<ModuleDependency> consumeDependencies(JsonReader reader) throws IOException {
@@ -182,10 +207,15 @@ public class ModuleMetadataParser {
     private ImmutableAttributes consumeAttributes(JsonReader reader) throws IOException {
         ImmutableAttributes attributes = ImmutableAttributes.EMPTY;
         reader.beginObject();
-        while(reader.peek()!= END_OBJECT) {
+        while (reader.peek() != END_OBJECT) {
             String attrName = reader.nextName();
-            String attrValue = reader.nextString();
-            attributes = attributesFactory.concat(attributes, Attribute.of(attrName, String.class), new CoercingStringValueSnapshot(attrValue, instantiator));
+            if (reader.peek() == BOOLEAN) {
+                boolean attrValue = reader.nextBoolean();
+                attributes = attributesFactory.concat(attributes, Attribute.of(attrName, Boolean.class), attrValue);
+            } else {
+                String attrValue = reader.nextString();
+                attributes = attributesFactory.concat(attributes, Attribute.of(attrName, String.class), new CoercingStringValueSnapshot(attrValue, instantiator));
+            }
         }
         reader.endObject();
         return attributes;
@@ -195,7 +225,7 @@ public class ModuleMetadataParser {
         reader.skipValue();
     }
 
-    private class ModuleFile {
+    private static class ModuleFile {
         final String name;
         final String uri;
 
@@ -205,7 +235,7 @@ public class ModuleMetadataParser {
         }
     }
 
-    private class ModuleDependency {
+    private static class ModuleDependency {
         final String group;
         final String module;
         final String version;

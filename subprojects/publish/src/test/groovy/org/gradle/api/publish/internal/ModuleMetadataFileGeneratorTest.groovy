@@ -16,34 +16,47 @@
 
 package org.gradle.api.publish.internal
 
+import org.gradle.api.Named
 import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.PublishArtifact
-import org.gradle.api.attributes.Usage
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.component.ComponentWithVariants
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
+import org.gradle.api.internal.attributes.ImmutableAttributes
 import org.gradle.api.internal.component.SoftwareComponentInternal
 import org.gradle.api.internal.component.UsageContext
 import org.gradle.internal.id.UniqueId
 import org.gradle.internal.scopeids.id.BuildInvocationScopeId
+import org.gradle.test.fixtures.file.TestNameTestDirectoryProvider
 import org.gradle.util.GradleVersion
+import org.gradle.util.TestUtil
+import org.junit.Rule
 import spock.lang.Specification
 
-
 class ModuleMetadataFileGeneratorTest extends Specification {
+    @Rule
+    TestNameTestDirectoryProvider tmpDir = new TestNameTestDirectoryProvider()
     def buildId = UniqueId.generate()
     def id = DefaultModuleVersionIdentifier.newId("group", "module", "1.2")
     def generator = new ModuleMetadataFileGenerator(new BuildInvocationScopeId(buildId))
 
     def "writes file for component with no variants"() {
         def writer = new StringWriter()
-        def component = Stub(ComponentWithVariants)
+        def component = Stub(TestComponent)
+        def publication = publication(component, id)
 
         when:
-        generator.generateTo(id, component, writer)
+        generator.generateTo(publication, [publication], writer)
 
         then:
         writer.toString() == """{
   "formatVersion": "0.2",
+  "component": {
+    "group": "group",
+    "module": "module",
+    "version": "1.2"
+  },
   "createdBy": {
     "gradle": {
       "version": "${GradleVersion.current().version}",
@@ -57,35 +70,44 @@ class ModuleMetadataFileGeneratorTest extends Specification {
     def "writes file for component with variants with files"() {
         def writer = new StringWriter()
         def component = Stub(TestComponent)
-        def usage1 = Stub(Usage)
-        usage1.name >> "api"
-        def usage2 = Stub(Usage)
-        usage2.name >> "runtime"
+        def publication = publication(component, id)
+
+        def file1 = tmpDir.file("artifact-1")
+        file1.text = "123"
+        def file2 = tmpDir.file("thing.dll")
+        file2.text = "abcd"
 
         def a1 = Stub(PublishArtifact)
-        a1.file >> new File("artifact-1")
+        a1.file >> file1
         a1.extension >> "zip"
         a1.classifier >> ""
         def a2 = Stub(PublishArtifact)
-        a2.file >> new File("thing.dll")
+        a2.file >> file2
         a2.extension >> "dll"
         a2.classifier >> "windows"
 
         def v1 = Stub(UsageContext)
-        v1.usage >> usage1
+        v1.name >> "v1"
+        v1.attributes >> attributes(usage: "compile")
         v1.artifacts >> [a1]
         def v2 = Stub(UsageContext)
-        v2.usage >> usage2
+        v2.name >> "v2"
+        v2.attributes >> attributes(usage: "runtime")
         v2.artifacts >> [a2]
 
         component.usages >> [v1, v2]
 
         when:
-        generator.generateTo(id, component, writer)
+        generator.generateTo(publication, [publication], writer)
 
         then:
         writer.toString() == """{
   "formatVersion": "0.2",
+  "component": {
+    "group": "group",
+    "module": "module",
+    "version": "1.2"
+  },
   "createdBy": {
     "gradle": {
       "version": "${GradleVersion.current().version}",
@@ -94,26 +116,32 @@ class ModuleMetadataFileGeneratorTest extends Specification {
   },
   "variants": [
     {
-      "name": "api",
+      "name": "v1",
       "attributes": {
-        "org.gradle.api.attributes.Usage": "api"
+        "usage": "compile"
       },
       "files": [
         {
           "name": "artifact-1",
-          "url": "module-1.2.zip"
+          "url": "module-1.2.zip",
+          "size": 3,
+          "sha1": "40bd001563085fc35165329ea1ff5c5ecbdbbeef",
+          "md5": "202cb962ac59075b964b07152d234b70"
         }
       ]
     },
     {
-      "name": "runtime",
+      "name": "v2",
       "attributes": {
-        "org.gradle.api.attributes.Usage": "runtime"
+        "usage": "runtime"
       },
       "files": [
         {
           "name": "thing.dll",
-          "url": "module-1.2-windows.dll"
+          "url": "module-1.2-windows.dll",
+          "size": 4,
+          "sha1": "81fe8bfe87576c3ecb22426f8e57847382917acf",
+          "md5": "e2fc714c4727ee9395f324cd2e7f331f"
         }
       ]
     }
@@ -125,10 +153,7 @@ class ModuleMetadataFileGeneratorTest extends Specification {
     def "writes file for component with variants with dependencies"() {
         def writer = new StringWriter()
         def component = Stub(TestComponent)
-        def usage1 = Stub(Usage)
-        usage1.name >> "api"
-        def usage2 = Stub(Usage)
-        usage2.name >> "runtime"
+        def publication = publication(component, id)
 
         def d1 = Stub(ModuleDependency)
         d1.group >> "g1"
@@ -141,20 +166,27 @@ class ModuleMetadataFileGeneratorTest extends Specification {
         d2.version >> "v2"
 
         def v1 = Stub(UsageContext)
-        v1.usage >> usage1
+        v1.name >> "v1"
+        v1.attributes >> attributes(usage: "compile")
         v1.dependencies >> [d1]
         def v2 = Stub(UsageContext)
-        v2.usage >> usage2
+        v2.name >> "v2"
+        v2.attributes >> attributes(usage: "runtime")
         v2.dependencies >> [d2]
 
         component.usages >> [v1, v2]
 
         when:
-        generator.generateTo(id, component, writer)
+        generator.generateTo(publication, [publication], writer)
 
         then:
         writer.toString() == """{
   "formatVersion": "0.2",
+  "component": {
+    "group": "group",
+    "module": "module",
+    "version": "1.2"
+  },
   "createdBy": {
     "gradle": {
       "version": "${GradleVersion.current().version}",
@@ -163,9 +195,9 @@ class ModuleMetadataFileGeneratorTest extends Specification {
   },
   "variants": [
     {
-      "name": "api",
+      "name": "v1",
       "attributes": {
-        "org.gradle.api.attributes.Usage": "api"
+        "usage": "compile"
       },
       "dependencies": [
         {
@@ -176,9 +208,9 @@ class ModuleMetadataFileGeneratorTest extends Specification {
       ]
     },
     {
-      "name": "runtime",
+      "name": "v2",
       "attributes": {
-        "org.gradle.api.attributes.Usage": "runtime"
+        "usage": "runtime"
       },
       "dependencies": [
         {
@@ -191,6 +223,191 @@ class ModuleMetadataFileGeneratorTest extends Specification {
   ]
 }
 """
+    }
+
+    def "writes file for component with variants with attributes"() {
+        def writer = new StringWriter()
+        def component = Stub(TestComponent)
+        def publication = publication(component, id)
+
+        def platform = TestUtil.objectFactory().named(Named, "windows")
+
+        def v1 = Stub(UsageContext)
+        v1.name >> "v1"
+        v1.attributes >> attributes(usage: "compile", debuggable: true, platform: platform)
+        def v2 = Stub(UsageContext)
+        v2.name >> "v2"
+        v2.attributes >> attributes()
+
+        component.usages >> [v1, v2]
+
+        when:
+        generator.generateTo(publication, [publication], writer)
+
+        then:
+        writer.toString() == """{
+  "formatVersion": "0.2",
+  "component": {
+    "group": "group",
+    "module": "module",
+    "version": "1.2"
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "${GradleVersion.current().version}",
+      "buildId": "${buildId}"
+    }
+  },
+  "variants": [
+    {
+      "name": "v1",
+      "attributes": {
+        "debuggable": true,
+        "platform": "windows",
+        "usage": "compile"
+      }
+    },
+    {
+      "name": "v2"
+    }
+  ]
+}
+"""
+    }
+
+    def "writes file with component that has children published in other modules"() {
+        def writer = new StringWriter()
+        def rootComponent = Stub(TestComponent)
+        def rootPublication = publication(rootComponent, id)
+
+        def id1 = DefaultModuleVersionIdentifier.newId("group", "other-1", "1")
+        def comp1 = Stub(TestComponent)
+        def publication1 = publication(comp1, id1)
+        def id2 = DefaultModuleVersionIdentifier.newId("group", "other-2", "2")
+        def comp2 = Stub(TestComponent)
+        def publication2 = publication(comp2, id2)
+
+        def v1 = Stub(UsageContext)
+        v1.name >> "v1"
+        v1.attributes >> attributes(usage: "compile")
+        def v2 = Stub(UsageContext)
+        v2.name >> "v2"
+        v2.attributes >> attributes(usage: "runtime")
+
+        rootComponent.variants >> [comp1, comp2]
+        rootComponent.usages >> []
+        comp1.usages >> [v1]
+        comp2.usages >> [v2]
+
+        when:
+        generator.generateTo(rootPublication, [rootPublication, publication1, publication2], writer)
+
+        then:
+        writer.toString() == """{
+  "formatVersion": "0.2",
+  "component": {
+    "group": "group",
+    "module": "module",
+    "version": "1.2"
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "${GradleVersion.current().version}",
+      "buildId": "${buildId}"
+    }
+  },
+  "variants": [
+    {
+      "name": "v1",
+      "attributes": {
+        "usage": "compile"
+      },
+      "available-at": {
+        "url": "../../other-1/1/other-1-1-module.json",
+        "group": "group",
+        "module": "other-1",
+        "version": "1"
+      }
+    },
+    {
+      "name": "v2",
+      "attributes": {
+        "usage": "runtime"
+      },
+      "available-at": {
+        "url": "../../other-2/2/other-2-2-module.json",
+        "group": "group",
+        "module": "other-2",
+        "version": "2"
+      }
+    }
+  ]
+}
+"""
+    }
+
+    def "writes file for module that is a child of another component"() {
+        def writer = new StringWriter()
+        def rootComponent = Stub(TestComponent)
+        def rootPublication = publication(rootComponent, id)
+
+        def child1 = DefaultModuleVersionIdentifier.newId("group", "child", "1")
+        def childComponent = Stub(TestComponent)
+        def childPublication = publication(childComponent, child1)
+
+        def variant = Stub(UsageContext)
+        variant.name >> "v1"
+        variant.attributes >> attributes(usage: "compile")
+
+        rootComponent.variants >> [childComponent]
+        rootComponent.usages >> []
+        childComponent.usages >> [variant]
+
+        when:
+        generator.generateTo(childPublication, [rootPublication, childPublication], writer)
+
+        then:
+        writer.toString() == """{
+  "formatVersion": "0.2",
+  "component": {
+    "url": "../../module/1.2/module-1.2-module.json",
+    "group": "group",
+    "module": "module",
+    "version": "1.2"
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "${GradleVersion.current().version}",
+      "buildId": "${buildId}"
+    }
+  },
+  "variants": [
+    {
+      "name": "v1",
+      "attributes": {
+        "usage": "compile"
+      }
+    }
+  ]
+}
+"""
+    }
+
+    def publication(SoftwareComponentInternal component, ModuleVersionIdentifier coords) {
+        def publication = Stub(PublicationInternal)
+        publication.component >> component
+        publication.coordinates >> coords
+        return publication
+    }
+
+    def attributes(Map<String, ?> values) {
+        def attrs = ImmutableAttributes.EMPTY
+        if (values) {
+            values.each { String key, Object value ->
+                attrs = TestUtil.attributesFactory().concat(attrs, Attribute.of(key, value.class), value)
+            }
+        }
+        return attrs
     }
 
     interface TestComponent extends ComponentWithVariants, SoftwareComponentInternal {

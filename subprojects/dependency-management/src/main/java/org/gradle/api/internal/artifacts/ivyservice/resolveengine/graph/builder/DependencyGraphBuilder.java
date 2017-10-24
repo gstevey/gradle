@@ -26,6 +26,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.internal.artifacts.ImmutableModuleIdentifierFactory;
 import org.gradle.api.internal.artifacts.ResolveContext;
 import org.gradle.api.internal.artifacts.dsl.ModuleReplacementsData;
+import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DependencySubstitutionApplicator;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.ModuleExclusions;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.DependencyGraphSelector;
@@ -69,13 +70,15 @@ public class DependencyGraphBuilder {
     private final ModuleExclusions moduleExclusions;
     private final BuildOperationExecutor buildOperationExecutor;
     private final ModuleReplacementsData moduleReplacementsData;
+    private final DependencySubstitutionApplicator dependencySubstitutionApplicator;
 
     public DependencyGraphBuilder(DependencyToComponentIdResolver componentIdResolver, ComponentMetaDataResolver componentMetaDataResolver,
                                   ResolveContextToComponentResolver resolveContextToComponentResolver,
                                   ConflictHandler conflictHandler, Spec<? super DependencyMetadata> edgeFilter,
                                   AttributesSchemaInternal attributesSchema,
                                   ImmutableModuleIdentifierFactory moduleIdentifierFactory, ModuleExclusions moduleExclusions,
-                                  BuildOperationExecutor buildOperationExecutor, ModuleReplacementsData moduleReplacementsData) {
+                                  BuildOperationExecutor buildOperationExecutor, ModuleReplacementsData moduleReplacementsData,
+                                  DependencySubstitutionApplicator dependencySubstitutionApplicator) {
         this.idResolver = componentIdResolver;
         this.metaDataResolver = componentMetaDataResolver;
         this.moduleResolver = resolveContextToComponentResolver;
@@ -86,6 +89,7 @@ public class DependencyGraphBuilder {
         this.moduleExclusions = moduleExclusions;
         this.buildOperationExecutor = buildOperationExecutor;
         this.moduleReplacementsData = moduleReplacementsData;
+        this.dependencySubstitutionApplicator = dependencySubstitutionApplicator;
     }
 
     public void resolve(final ResolveContext resolveContext, final DependencyGraphVisitor modelVisitor) {
@@ -94,7 +98,7 @@ public class DependencyGraphBuilder {
         DefaultBuildableComponentResolveResult rootModule = new DefaultBuildableComponentResolveResult();
         moduleResolver.resolve(resolveContext, rootModule);
 
-        final ResolveState resolveState = new ResolveState(idGenerator, rootModule, resolveContext.getName(), idResolver, metaDataResolver, edgeFilter, attributesSchema, moduleIdentifierFactory, moduleExclusions, moduleReplacementsData);
+        final ResolveState resolveState = new ResolveState(idGenerator, rootModule, resolveContext.getName(), idResolver, metaDataResolver, edgeFilter, attributesSchema, moduleIdentifierFactory, moduleExclusions, moduleReplacementsData, dependencySubstitutionApplicator);
         conflictHandler.registerResolver(new DirectDependencyForcingResolver(resolveState.getRoot().getComponent()));
 
         traverseGraph(resolveState);
@@ -113,6 +117,10 @@ public class DependencyGraphBuilder {
         final List<EdgeState> dependencies = Lists.newArrayList();
         final List<EdgeState> dependenciesMissingLocalMetadata = Lists.newArrayList();
         final Map<ModuleVersionIdentifier, ComponentIdentifier> componentIdentifierCache = Maps.newHashMap();
+        final OptionalDependenciesHandler optionalDependenciesHandler = new OptionalDependenciesHandler(
+            resolveState.getOptionalDependencies(),
+            resolveState.getModuleIdentifierFactory(),
+            resolveState.getDependencySubstitutionApplicator());
 
         while (resolveState.peek() != null || conflictHandler.hasConflicts()) {
             if (resolveState.peek() != null) {
@@ -122,7 +130,7 @@ public class DependencyGraphBuilder {
                 // Calculate the outgoing edges of this configuration
                 dependencies.clear();
                 dependenciesMissingLocalMetadata.clear();
-                node.visitOutgoingDependencies(dependencies);
+                node.visitOutgoingDependencies(dependencies, optionalDependenciesHandler);
 
                 resolveEdges(node, dependencies, dependenciesMissingLocalMetadata, resolveState, componentIdentifierCache);
             } else {
@@ -250,9 +258,8 @@ public class DependencyGraphBuilder {
     }
 
     /**
-     * Prepares the resolution of edges, either serially or concurrently. It uses a simple heuristic to determine
-     * if we should perform concurrent resolution, based on the the number of edges, and whether they have unresolved
-     * metadata. Determining this requires calls to `resolveModuleRevisionId`, which will *not* trigger metadata download.
+     * Prepares the resolution of edges, either serially or concurrently. It uses a simple heuristic to determine if we should perform concurrent resolution, based on the the number of edges, and
+     * whether they have unresolved metadata. Determining this requires calls to `resolveModuleRevisionId`, which will *not* trigger metadata download.
      *
      * @param dependencies the dependencies to be resolved
      * @param dependenciesToBeResolvedInParallel output, edges which will need parallel metadata download

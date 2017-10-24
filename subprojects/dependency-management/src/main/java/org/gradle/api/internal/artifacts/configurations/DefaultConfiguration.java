@@ -119,6 +119,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     private final CompositeDomainObjectSet<Dependency> inheritedDependencies;
     private final DefaultDependencySet allDependencies;
     private ImmutableActionSet<DependencySet> defaultDependencyActions = ImmutableActionSet.empty();
+    private ImmutableActionSet<DependencySet> withDependencyActions = ImmutableActionSet.empty();
     private final DefaultPublishArtifactSet artifacts;
     private final CompositeDomainObjectSet<PublishArtifact> inheritedArtifacts;
     private final DefaultPublishArtifactSet allArtifacts;
@@ -360,14 +361,22 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     }
 
     @Override
-    public void triggerWhenEmptyActionsIfNecessary() {
-        if (dependencies.isEmpty()) {
-            defaultDependencyActions.execute(dependencies);
-        }
-        // Discard actions
+    public Configuration withDependencies(final Action<? super DependencySet> action) {
+        validateMutation(MutationType.DEPENDENCIES);
+        withDependencyActions = withDependencyActions.add(action);
+        return this;
+    }
+
+    public void runDependencyActions() {
+        defaultDependencyActions.execute(dependencies);
+        withDependencyActions.execute(dependencies);
+
+        // Discard actions after execution
         defaultDependencyActions = ImmutableActionSet.empty();
+        withDependencyActions = ImmutableActionSet.empty();
+
         for (Configuration superConfig : extendsFrom) {
-            ((ConfigurationInternal) superConfig).triggerWhenEmptyActionsIfNecessary();
+            ((ConfigurationInternal) superConfig).runDependencyActions();
         }
     }
 
@@ -454,6 +463,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         buildOperationExecutor.run(new RunnableBuildOperation() {
             @Override
             public void run(BuildOperationContext context) {
+                runDependencyActions();
                 preventFromFurtherMutation();
 
                 ResolvableDependencies incoming = getIncoming();
@@ -487,7 +497,6 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         } finally {
             insideBeforeResolve = false;
         }
-        triggerWhenEmptyActionsIfNecessary();
     }
 
     private void markReferencedProjectConfigurationsObserved(final InternalState requestedState) {
@@ -1012,6 +1021,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         }
 
         public DependencySet getDependencies() {
+            runDependencyActions();
             return getAllDependencies();
         }
 

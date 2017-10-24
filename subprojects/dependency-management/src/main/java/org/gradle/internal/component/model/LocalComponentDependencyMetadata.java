@@ -47,6 +47,7 @@ public class LocalComponentDependencyMetadata extends AbstractDependencyMetadata
     private final boolean force;
     private final boolean changing;
     private final boolean transitive;
+
     private final AttributeContainer moduleAttributes;
 
     public LocalComponentDependencyMetadata(ComponentSelector selector, ModuleVersionSelector requested,
@@ -151,6 +152,11 @@ public class LocalComponentDependencyMetadata extends AbstractDependencyMetadata
     @Override
     public boolean isForce() {
         return force;
+    }
+
+    @Override
+    public boolean isOptional() {
+        return false;
     }
 
     @Override

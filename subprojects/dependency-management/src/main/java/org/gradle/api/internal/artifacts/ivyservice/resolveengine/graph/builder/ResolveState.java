@@ -23,6 +23,7 @@ import org.gradle.api.artifacts.ModuleVersionSelector;
 import org.gradle.api.internal.artifacts.ImmutableModuleIdentifierFactory;
 import org.gradle.api.internal.artifacts.ResolvedConfigurationIdentifier;
 import org.gradle.api.internal.artifacts.dsl.ModuleReplacementsData;
+import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DependencySubstitutionApplicator;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.ModuleExclusions;
 import org.gradle.api.internal.attributes.AttributesSchemaInternal;
 import org.gradle.api.specs.Spec;
@@ -59,10 +60,13 @@ class ResolveState {
     private final DeselectVersionAction deselectVersionAction = new DeselectVersionAction(this);
     private final ReplaceSelectionWithConflictResultAction replaceSelectionWithConflictResultAction;
     private final ModuleReplacementsData moduleReplacementsData;
+    private final OptionalDependenciesState optionalDependencies = new OptionalDependenciesState();
+    private final DependencySubstitutionApplicator dependencySubstitutionApplicator;
 
     public ResolveState(IdGenerator<Long> idGenerator, ComponentResolveResult rootResult, String rootConfigurationName, DependencyToComponentIdResolver idResolver,
                         ComponentMetaDataResolver metaDataResolver, Spec<? super DependencyMetadata> edgeFilter, AttributesSchemaInternal attributesSchema,
-                        ImmutableModuleIdentifierFactory moduleIdentifierFactory, ModuleExclusions moduleExclusions, ModuleReplacementsData moduleReplacementsData) {
+                        ImmutableModuleIdentifierFactory moduleIdentifierFactory, ModuleExclusions moduleExclusions, ModuleReplacementsData moduleReplacementsData,
+                        DependencySubstitutionApplicator dependencySubstitutionApplicator) {
         this.idGenerator = idGenerator;
         this.idResolver = idResolver;
         this.metaDataResolver = metaDataResolver;
@@ -71,6 +75,7 @@ class ResolveState {
         this.moduleIdentifierFactory = moduleIdentifierFactory;
         this.moduleExclusions = moduleExclusions;
         this.moduleReplacementsData = moduleReplacementsData;
+        this.dependencySubstitutionApplicator = dependencySubstitutionApplicator;
         ComponentState rootVersion = getRevision(rootResult.getId());
         rootVersion.setMetaData(rootResult.getMetaData());
         root = new RootNode(idGenerator.generateId(), rootVersion, new ResolvedConfigurationIdentifier(rootVersion.getId(), rootConfigurationName), this);
@@ -123,11 +128,11 @@ class ResolveState {
         return selectors.values();
     }
 
-    public SelectorState getSelector(DependencyMetadata dependencyMetadata) {
+    public SelectorState getSelector(DependencyMetadata dependencyMetadata, ModuleIdentifier moduleIdentifier) {
         ModuleVersionSelector requested = dependencyMetadata.getRequested();
         SelectorState resolveState = selectors.get(requested);
         if (resolveState == null) {
-            resolveState = new SelectorState(idGenerator.generateId(), dependencyMetadata, idResolver, this);
+            resolveState = new SelectorState(idGenerator.generateId(), dependencyMetadata, idResolver, this, moduleIdentifier);
             selectors.put(requested, resolveState);
         }
         return resolveState;
@@ -186,5 +191,13 @@ class ResolveState {
 
     public ModuleReplacementsData getModuleReplacementsData() {
         return moduleReplacementsData;
+    }
+
+    public OptionalDependenciesState getOptionalDependencies() {
+        return optionalDependencies;
+    }
+
+    public DependencySubstitutionApplicator getDependencySubstitutionApplicator() {
+        return dependencySubstitutionApplicator;
     }
 }

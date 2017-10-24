@@ -47,8 +47,8 @@ public class IvyDependencyMetadata extends DefaultDependencyMetadata {
     private final SetMultimap<String, String> confs;
     private final List<Exclude> excludes;
 
-    public IvyDependencyMetadata(ModuleVersionSelector requested, String dynamicConstraintVersion, boolean force, boolean changing, boolean transitive, Multimap<String, String> confMappings, List<Artifact> artifacts, List<Exclude> excludes) {
-        super(requested, artifacts);
+    public IvyDependencyMetadata(ModuleVersionSelector requested, String dynamicConstraintVersion, boolean force, boolean changing, boolean transitive, boolean optional, Multimap<String, String> confMappings, List<Artifact> artifacts, List<Exclude> excludes) {
+        super(requested, artifacts, optional);
         this.dynamicConstraintVersion = dynamicConstraintVersion;
         this.force = force;
         this.changing = changing;
@@ -58,7 +58,7 @@ public class IvyDependencyMetadata extends DefaultDependencyMetadata {
     }
 
     public IvyDependencyMetadata(ModuleVersionSelector requested, ListMultimap<String, String> confMappings) {
-        this(requested, requested.getVersion(), false, false, true, confMappings, Collections.<Artifact>emptyList(), Collections.<Exclude>emptyList());
+        this(requested, requested.getVersion(), false, false, true, false, confMappings, Collections.<Artifact>emptyList(), Collections.<Exclude>emptyList());
     }
 
     @Override
@@ -68,7 +68,7 @@ public class IvyDependencyMetadata extends DefaultDependencyMetadata {
 
     @Override
     protected DependencyMetadata withRequested(ModuleVersionSelector newRequested) {
-        return new IvyDependencyMetadata(newRequested, dynamicConstraintVersion, force, changing, transitive, confs, getDependencyArtifacts(), excludes);
+        return new IvyDependencyMetadata(newRequested, dynamicConstraintVersion, force, changing, transitive, isOptional(), confs, getDependencyArtifacts(), excludes);
     }
 
     @Override
@@ -107,15 +107,17 @@ public class IvyDependencyMetadata extends DefaultDependencyMetadata {
         boolean matched = false;
         String fromConfigName = fromConfiguration.getName();
         for (String config : fromConfiguration.getHierarchy()) {
-            Set<String> targetPatterns = confs.get(config);
-            if (!targetPatterns.isEmpty()) {
-                matched = true;
-            }
-            for (String targetPattern : targetPatterns) {
-                findMatches(fromComponent, targetComponent, fromConfigName, config, targetPattern, targets);
+            if (confs.containsKey(config)) {
+                Set<String> targetPatterns = confs.get(config);
+                if (!targetPatterns.isEmpty()) {
+                    matched = true;
+                }
+                for (String targetPattern : targetPatterns) {
+                    findMatches(fromComponent, targetComponent, fromConfigName, config, targetPattern, targets);
+                }
             }
         }
-        if (!matched) {
+        if (!matched && confs.containsKey("%")) {
             for (String targetPattern : confs.get("%")) {
                 findMatches(fromComponent, targetComponent, fromConfigName, fromConfigName, targetPattern, targets);
             }

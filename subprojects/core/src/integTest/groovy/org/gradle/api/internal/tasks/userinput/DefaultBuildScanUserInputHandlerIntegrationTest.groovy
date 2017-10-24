@@ -43,8 +43,9 @@ class DefaultBuildScanUserInputHandlerIntegrationTest extends AbstractUserInputH
         def gradleHandle = executer.withTasks(DUMMY_TASK_NAME).start()
 
         then:
-        writeToStdInAndClose(gradleHandle, YES.bytes)
+        writeToStdIn(gradleHandle, YES.bytes)
         gradleHandle.waitForFinish()
+        closeStdIn(gradleHandle)
         expectRenderedPromptAndAnswer(gradleHandle, true)
 
         where:
@@ -64,12 +65,14 @@ class DefaultBuildScanUserInputHandlerIntegrationTest extends AbstractUserInputH
         def gradleHandle = executer.withTasks(DUMMY_TASK_NAME).start()
 
         then:
-        writeToStdInAndClose(gradleHandle, YES.bytes)
+        writeToStdIn(gradleHandle, YES.bytes)
         gradleHandle.waitForFinish()
+        daemons.daemon.becomesIdle()
+        closeStdIn(gradleHandle)
         expectRenderedPromptAndAnswer(gradleHandle, true)
 
         cleanup:
-        daemons.killAll()
+        daemons.daemon.kill()
 
         where:
         consoleOutput       | description
@@ -108,10 +111,12 @@ class DefaultBuildScanUserInputHandlerIntegrationTest extends AbstractUserInputH
 
         then:
         gradleHandle.cancelWithEOT().waitForFinish()
+        daemons.daemon.becomesIdle()
+        closeStdIn(gradleHandle)
         expectRenderedPromptAndAnswer(gradleHandle, null)
 
         cleanup:
-        daemons.killAll()
+        daemons.daemon.kill()
 
         where:
         consoleOutput       | description
@@ -128,15 +133,15 @@ class DefaultBuildScanUserInputHandlerIntegrationTest extends AbstractUserInputH
         def gradleHandle = executer.withTasks(DUMMY_TASK_NAME).start()
 
         then:
-        writeToStdInAndClose(gradleHandle, stdin)
+        writeToStdIn(gradleHandle, stdin)
         gradleHandle.waitForFinish()
+        closeStdIn(gradleHandle)
         expectRenderedPromptAndAnswer(gradleHandle, accepted)
 
         where:
         input    | stdin     | accepted
         YES      | YES.bytes | true
         NO       | NO.bytes  | false
-        'ctrl-d' | EOF       | null
     }
 
     def "can ask for license acceptance when build is executed in parallel"() {
@@ -155,8 +160,9 @@ class DefaultBuildScanUserInputHandlerIntegrationTest extends AbstractUserInputH
         def gradleHandle = executer.withTasks(DUMMY_TASK_NAME).start()
 
         then:
-        writeToStdInAndClose(gradleHandle, YES.bytes)
+        writeToStdIn(gradleHandle, YES.bytes)
         gradleHandle.waitForFinish()
+        closeStdIn(gradleHandle)
         expectRenderedPromptAndAnswer(gradleHandle, true)
     }
 

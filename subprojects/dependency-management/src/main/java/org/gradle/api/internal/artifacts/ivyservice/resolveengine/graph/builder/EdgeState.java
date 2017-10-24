@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.builder;
 
+import com.google.common.collect.ImmutableList;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ModuleVersionSelector;
 import org.gradle.api.artifacts.component.ComponentSelector;
@@ -52,12 +53,12 @@ class EdgeState implements DependencyGraphEdge {
     private ComponentState targetModuleRevision;
     private ModuleVersionResolveException targetNodeSelectionFailure;
 
-    EdgeState(NodeState from, DependencyMetadata dependencyMetadata, ModuleExclusion moduleExclusion, ResolveState resolveState) {
+    EdgeState(NodeState from, DependencyState dependencyState, ModuleExclusion moduleExclusion, ResolveState resolveState) {
         this.from = from;
-        this.dependencyMetadata = dependencyMetadata;
+        this.dependencyMetadata = dependencyState.getDependencyMetadata();
         this.moduleExclusion = moduleExclusion;
         this.resolveState = resolveState;
-        this.selector = resolveState.getSelector(dependencyMetadata);
+        this.selector = resolveState.getSelector(dependencyMetadata, dependencyState.getModuleIdentifier());
     }
 
     @Override
@@ -157,7 +158,7 @@ class EdgeState implements DependencyGraphEdge {
         if (excludes.isEmpty()) {
             return ModuleExclusions.excludeNone();
         }
-        return resolveState.getModuleExclusions().excludeAny(excludes);
+        return resolveState.getModuleExclusions().excludeAny(ImmutableList.copyOf(excludes));
     }
 
     @Override

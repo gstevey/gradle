@@ -15,10 +15,9 @@
  */
 package org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution;
 
-import org.gradle.api.Action;
-import org.gradle.api.artifacts.DependencySubstitution;
-import org.gradle.api.artifacts.component.ComponentSelector;
+import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.internal.artifacts.DependencySubstitutionInternal;
+import org.gradle.api.internal.artifacts.ImmutableModuleIdentifierFactory;
 import org.gradle.internal.component.model.DependencyMetadata;
 import org.gradle.internal.resolve.ModuleVersionResolveException;
 import org.gradle.internal.resolve.resolver.DependencyToComponentIdResolver;
@@ -26,27 +25,28 @@ import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
 
 public class DependencySubstitutionResolver implements DependencyToComponentIdResolver {
     private final DependencyToComponentIdResolver resolver;
-    private final Action<DependencySubstitution> rule;
+    private final DependencySubstitutionApplicator applicator;
+    private final ImmutableModuleIdentifierFactory moduleIdentifierFactory;
 
-    public DependencySubstitutionResolver(DependencyToComponentIdResolver resolver, Action<DependencySubstitution> rule) {
+    public DependencySubstitutionResolver(DependencyToComponentIdResolver resolver, DependencySubstitutionApplicator applicator, ImmutableModuleIdentifierFactory moduleIdentifierFactory) {
         this.resolver = resolver;
-        this.rule = rule;
+        this.applicator = applicator;
+        this.moduleIdentifierFactory = moduleIdentifierFactory;
     }
 
-    public void resolve(DependencyMetadata dependency, BuildableComponentIdResolveResult result) {
-        ComponentSelector selector = dependency.getSelector();
-        DependencySubstitutionInternal details = new DefaultDependencySubstitution(selector, dependency.getRequested());
-        try {
-            rule.execute(details);
-        } catch (Throwable e) {
-            result.failed(new ModuleVersionResolveException(selector, e));
+    public void resolve(DependencyMetadata dependency, ModuleIdentifier targetModuleId, BuildableComponentIdResolveResult result) {
+        DependencySubstitutionApplicator.SubstitutionResult application = applicator.apply(dependency);
+        if (application.hasFailure()) {
+            result.failed(new ModuleVersionResolveException(dependency.getSelector(), application.getFailure()));
             return;
         }
+        DependencySubstitutionInternal details = application.getResult();
         if (details.isUpdated()) {
-            resolver.resolve(dependency.withTarget(details.getTarget()), result);
+            DependencyMetadata target = dependency.withTarget(details.getTarget());
+            resolver.resolve(target, moduleIdentifierFactory.module(target.getRequested().getGroup(), target.getRequested().getName()), result);
             result.setSelectionReason(details.getSelectionReason());
             return;
         }
-        resolver.resolve(dependency, result);
+        resolver.resolve(dependency, targetModuleId, result);
     }
 }
