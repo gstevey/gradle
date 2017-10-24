@@ -22,6 +22,7 @@ import org.gradle.api.JavaVersion;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.ForkOptions;
+import org.gradle.incap.IncapBuildClientFactory;
 import org.gradle.internal.Factory;
 import org.gradle.incap.MappingFileConstants;
 import org.gradle.util.DeprecationLogger;
@@ -191,11 +192,11 @@ public class JavaCompilerArgumentsBuilder {
                 args.add("-processorpath");
                 args.add(Joiner.on(File.pathSeparator).join(annotationProcessorPath));
 
-                //incap options
+                // incap options
                 args.add("-A"
-                         + MappingFileConstants.MAPPING_FILE_FOLDER_OPTION
-                         + "="
-                         + spec.getIncrementalAnnotationProcessorWorkingDir());
+                    + MappingFileConstants.MAPPING_FILE_FOLDER_OPTION
+                    + "="
+                    + spec.getIncrementalAnnotationProcessorWorkingDir());
                 args.add("-A"
                     + MappingFileConstants.INCAP_INCREMENTAL_OPTION
                     + "="

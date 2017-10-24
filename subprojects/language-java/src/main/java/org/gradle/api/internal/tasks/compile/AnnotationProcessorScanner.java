@@ -42,28 +42,18 @@ class AnnotationProcessorScanner implements FileContentCacheFactory.Calculator<M
 
     private static final Pattern CLASSNAME = Pattern.compile("(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\‌​.)+\\p{javaJavaIdentifierPart}\\p{javaJavaIdentifierPart}*");
 
-    // You can have multiple Annotation Processor classes declared in the meta-inf file:
+    public static final String META_INF_INCAP = "META-INF/incap";
+
+    // You can have multiple Annotation Processor classes declared in
+    // META-INF/services/javax.annotation.processing.Processor
     //
     //   my.annotation.processor.Processor1
     //   my.annotation.processor.Processor2
     //
     // As a policy decision (for now), we require all processors in the file to be incremental,
-    // or else we consider none of them to be.  This means we only have to scan for an occurrence
-    // of "INCAP" in the file, e.g.:
-    //
-    //   my.annotation.processor.Processor1
-    //   my.annotation.processor.Processor2
-    //   INCAP=true
-    //
-    // This approach is forward-compatible, should we decide to allow specifying incrementality
-    // on a per-processor basis; the file syntax parsing might be extended to permit, e.g.:
-    //
-    //   my.annotation.processor.Processor1
-    //   INCAP=false
-    //   my.annotation.processor.Processor2
-    //   INCAP=true
-
-    private static final String INCAP_DECLARATION = "INCAP";
+    // if any are.  If we find a "META-INF/incap" file, we consider them all to be incremental.
+    // We only record one processor class name from each classpath artifact.  It's only used
+    // for logging, so it doesn't really matter which one we record.
 
     private final Map<String, String> result = Maps.newHashMap(ImmutableMap.<String, String>builder()
         .put(AnnotationProcessorInfo.PROCESSOR_KEY, "false")
@@ -72,28 +62,34 @@ class AnnotationProcessorScanner implements FileContentCacheFactory.Calculator<M
         .build());
 
     @Override
-    public Map<String, String> calculate(File file, FileType fileType) {
+    public Map<String, String> calculate(File dirOrJar, FileType fileType) {
         if (fileType == FileType.Directory) {
-            File spec = new File(file, "META-INF/services/javax.annotation.processing.Processor");
+            File spec = new File(dirOrJar, "META-INF/services/javax.annotation.processing.Processor");
+            if (new File(dirOrJar, META_INF_INCAP).isFile()) {
+                setIncremental();
+            }
             if (spec.isFile()) {
                 scanFile(spec);
             }
             return result;
         }
 
-        if (fileType == FileType.RegularFile && FileUtils.hasExtension(file, "jar")) {
+        if (fileType == FileType.RegularFile && FileUtils.hasExtension(dirOrJar, "jar")) {
             try {
-                ZipFile zipFile = new ZipFile(file);
+                ZipFile zipFile = new ZipFile(dirOrJar);
                 try {
                     ZipEntry entry = zipFile.getEntry("META-INF/services/javax.annotation.processing.Processor");
                     if (entry != null) {
                         scanZipEntry(zipFile, entry);
                     }
+                    if (zipFile.getEntry(META_INF_INCAP) != null) {
+                        setIncremental();
+                    }
                 } finally {
                     zipFile.close();
                 }
             } catch (IOException e) {
-                DeprecationLogger.nagUserWith("Malformed jar [" + file.getName() + "] found on compile classpath. Gradle 5.0 will no longer allow malformed jars on compile classpath.");
+                DeprecationLogger.nagUserWith("Malformed jar [" + dirOrJar.getName() + "] found on compile classpath. Gradle 5.0 will no longer allow malformed jars on compile classpath.");
             }
         }
 
@@ -134,9 +130,7 @@ class AnnotationProcessorScanner implements FileContentCacheFactory.Calculator<M
     }
 
     private void processLine(String line) {
-        if (line.contains(INCAP_DECLARATION)) {
-            setIncremental();
-        } else if (CLASSNAME.matcher(line).matches()) {
+        if (CLASSNAME.matcher(line).matches()) {
             setName(line);
         }
     }

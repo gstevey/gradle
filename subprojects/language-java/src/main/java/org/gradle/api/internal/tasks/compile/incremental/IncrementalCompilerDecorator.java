@@ -99,8 +99,8 @@ public class IncrementalCompilerDecorator {
     // If there is no annotation processing at all, then we permit an incremental build.
     private boolean allowIncrementalAnnotationProcessing() {
         FileCollection classPath = new SimpleFileCollection(javaCompileSpec.getCompileClasspath());
-        Set<AnnotationProcessorInfo> processors = annotationProcessorDetector.getAnnotationProcessorInfo(compileOptions, classPath);
-        for (AnnotationProcessorInfo info : processors) {
+        Set<AnnotationProcessorInfo> cacheInfo = annotationProcessorDetector.getAnnotationProcessorInfo(compileOptions, classPath);
+        for (AnnotationProcessorInfo info : cacheInfo) {
             if (info.isProcessor() && !info.isIncrementalEnabled()) {
                 LOG.info("{} - is not incremental.  The {} annotation processor does not support incremental builds.",
                          displayName, info.getName());
