@@ -75,20 +75,25 @@ public class AnnotationProcessorDetector {
         if (checkExplicitProcessorOption(compileOptions)) {
             return compileClasspath;
         }
+        return makeCachingFileCollectionForPath(compileClasspath);
+    }
+
+    private FileCollection makeCachingFileCollectionForPath(final FileCollection inputPath) {
         return fileCollectionFactory.create(new AbstractTaskDependency() {
             @Override
             public void visitDependencies(TaskDependencyResolveContext context) {
-                context.add(compileClasspath);
+                context.add(inputPath);
             }
         }, new MinimalFileSet() {
             @Override
             public Set<File> getFiles() {
-                // TODO:  This returns the entire compile classpath if any element of the
-                // compile classpath contains an annotation processor.  Why not just return
-                // the subset of elements that have annotation processors?
-                for (File file : compileClasspath) {
+                // TODO:  This currently only scans until it finds one AP.
+                // Might want to get rid of this code entirely, and just return the compile classpath
+                // from getEffectiveAnnotationProcessorClasspath.  In IncrementalCompilerDecorator we
+                // look in the cache, which should trigger the calculator.
+                for (File file : inputPath) {
                     if ((new AnnotationProcessorInfo(cache.get(file))).isProcessor()) {
-                        return compileClasspath.getFiles();
+                        return inputPath.getFiles();
                     }
                 }
                 return Collections.emptySet();
@@ -102,7 +107,6 @@ public class AnnotationProcessorDetector {
     }
 
     public Set<AnnotationProcessorInfo> getAnnotationProcessorInfo(final CompileOptions compileOptions, final FileCollection compileClasspath) {
-
         FileCollection effectiveAnnotationProcessorPath = getEffectiveAnnotationProcessorClasspath(compileOptions, compileClasspath);
         Set<AnnotationProcessorInfo> result = Sets.newHashSet();
         for (File file : effectiveAnnotationProcessorPath) {
@@ -117,7 +121,7 @@ public class AnnotationProcessorDetector {
         return result;
     }
 
-    private static boolean checkExplicitProcessorOption(CompileOptions compileOptions) {
+    private boolean checkExplicitProcessorOption(CompileOptions compileOptions) {
         boolean hasExplicitProcessor = false;
         int pos = compileOptions.getCompilerArgs().indexOf("-processor");
         if (pos >= 0) {

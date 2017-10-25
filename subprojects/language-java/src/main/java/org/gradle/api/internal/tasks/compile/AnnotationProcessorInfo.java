@@ -54,4 +54,11 @@ public class AnnotationProcessorInfo {
     public boolean isProcessor() {
         return properties == null ? false : Boolean.valueOf(properties.get(PROCESSOR_KEY));
     }
+
+    @Override
+    public String toString() {
+        return "AnnotationProcessorInfo{processor=" + isProcessor() +
+            ", name=" + getName() +
+            ", incremental=" + isIncrementalEnabled() + "}";
+    }
 }
