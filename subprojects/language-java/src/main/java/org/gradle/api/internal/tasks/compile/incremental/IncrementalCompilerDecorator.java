@@ -16,7 +16,10 @@
 
 package org.gradle.api.internal.tasks.compile.incremental;
 
+import com.google.common.collect.Sets;
+
 import java.util.Set;
+
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.file.collections.SimpleFileCollection;
 import org.gradle.api.internal.tasks.compile.CleaningJavaCompiler;
@@ -28,6 +31,7 @@ import org.gradle.api.internal.tasks.compile.incremental.deps.ClassSetAnalysis;
 import org.gradle.api.internal.tasks.compile.incremental.deps.ClassSetAnalysisData;
 import org.gradle.api.internal.tasks.compile.incremental.jar.JarClasspathSnapshotMaker;
 import org.gradle.api.internal.tasks.compile.incremental.jar.PreviousCompilation;
+import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.CompileOptions;
@@ -99,21 +103,39 @@ public class IncrementalCompilerDecorator {
     // If there is no annotation processing at all, then we permit an incremental build.
     private boolean allowIncrementalAnnotationProcessing() {
         FileCollection classPath = new SimpleFileCollection(javaCompileSpec.getCompileClasspath());
-        Set<AnnotationProcessorInfo> cacheInfo = annotationProcessorDetector.getAnnotationProcessorInfo(compileOptions, classPath);
-        boolean found = false;
-        for (AnnotationProcessorInfo info : cacheInfo) {
-            found |= info.isProcessor();
-            if (info.isProcessor() && !info.isIncrementalEnabled()) {
-                LOG.info("{} - is not incremental.  The {} annotation processor does not support incremental builds.",
-                         displayName, info.getName());
-                return false;
+        Set<AnnotationProcessorInfo> cachedInfo = annotationProcessorDetector.getAnnotationProcessorInfo(compileOptions, classPath);
+        boolean foundProcessors = false;
+        Set<String> badProcs = Sets.newHashSet();
+        for (AnnotationProcessorInfo info : cachedInfo) {
+            if (info.isProcessor()) {
+                foundProcessors = true;
+                if (!info.isIncrementalEnabled()) {
+                    badProcs.add(info.getName());
+                }
             }
         }
-        if (found) {
-            LOG.info("All annotation processors are incremental.");
+        if (!badProcs.isEmpty()) {
+            printBadProcessors(badProcs);
+            return false;
+        }
+        if (foundProcessors) {
+            LOG.log(LogLevel.WARN, "All annotation processors are incremental.");
         } else {
-            LOG.info("No annotation processors were found.");
+            LOG.log(LogLevel.WARN, "No annotation processors were found.");
         }
         return true;
+    }
+
+    private void printBadProcessors(Set<String> nonIncrementalProcessors) {
+        StringBuilder sb = new StringBuilder(500);
+        sb.append(displayName);
+        sb.append(" - is not incremental.  ");
+        sb.append("The following annotation processor(s) do not support incremental builds:\n");
+        for (String processor : nonIncrementalProcessors) {
+            sb.append("  ");
+            sb.append(processor);
+            sb.append("\n");
+        }
+        LOG.log(LogLevel.WARN, sb.toString().trim());
     }
 }
