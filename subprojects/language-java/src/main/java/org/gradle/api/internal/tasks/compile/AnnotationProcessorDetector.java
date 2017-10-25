@@ -121,7 +121,7 @@ public class AnnotationProcessorDetector {
         return result;
     }
 
-    private boolean checkExplicitProcessorOption(CompileOptions compileOptions) {
+    public boolean checkExplicitProcessorOption(CompileOptions compileOptions) {
         boolean hasExplicitProcessor = false;
         int pos = compileOptions.getCompilerArgs().indexOf("-processor");
         if (pos >= 0) {

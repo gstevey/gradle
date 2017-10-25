@@ -104,6 +104,10 @@ public class IncrementalCompilerDecorator {
     private boolean allowIncrementalAnnotationProcessing() {
         FileCollection classPath = new SimpleFileCollection(javaCompileSpec.getCompileClasspath());
         Set<AnnotationProcessorInfo> cachedInfo = annotationProcessorDetector.getAnnotationProcessorInfo(compileOptions, classPath);
+        if (annotationProcessorDetector.checkExplicitProcessorOption(compileOptions)) {
+            LOG.log(LogLevel.WARN, "{} is not incremental:  The explicit -processor compiler option is not supported for incremental annotation processing.", displayName);
+            return false;
+        }
         boolean foundProcessors = false;
         Set<String> badProcs = Sets.newHashSet();
         for (AnnotationProcessorInfo info : cachedInfo) {
