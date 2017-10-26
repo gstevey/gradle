@@ -105,7 +105,7 @@ public class IncrementalCompilerDecorator {
         FileCollection classPath = new SimpleFileCollection(javaCompileSpec.getCompileClasspath());
         Set<AnnotationProcessorInfo> cachedInfo = annotationProcessorDetector.getAnnotationProcessorInfo(compileOptions, classPath);
         if (annotationProcessorDetector.checkExplicitProcessorOption(compileOptions)) {
-            LOG.log(LogLevel.WARN, "{} is not incremental:  The explicit -processor compiler option is not supported for incremental annotation processing.", displayName);
+            LOG.info("{} is not incremental:  The explicit -processor compiler option is not supported for incremental annotation processing.", displayName);
             return false;
         }
         boolean foundProcessors = false;
@@ -123,9 +123,9 @@ public class IncrementalCompilerDecorator {
             return false;
         }
         if (foundProcessors) {
-            LOG.log(LogLevel.WARN, "All annotation processors are incremental.");
+            LOG.info("All annotation processors are incremental.");
         } else {
-            LOG.log(LogLevel.WARN, "No annotation processors were found.");
+            LOG.info("No annotation processors were found.");
         }
         return true;
     }
@@ -140,6 +140,6 @@ public class IncrementalCompilerDecorator {
             sb.append(processor);
             sb.append("\n");
         }
-        LOG.log(LogLevel.WARN, sb.toString().trim());
+        LOG.info(sb.toString().trim());
     }
 }
