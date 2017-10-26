@@ -44,7 +44,7 @@ class AnnotationProcessorScanner implements FileContentCacheFactory.Calculator<M
 
     public static final String META_INF_INCAP = "META-INF/incap";
 
-    // You can have multiple Annotation Processor classes declared in
+    // Per the JSR-269 spec, you can have multiple Annotation Processor classes declared in
     // META-INF/services/javax.annotation.processing.Processor
     //
     //   my.annotation.processor.Processor1
@@ -60,16 +60,18 @@ class AnnotationProcessorScanner implements FileContentCacheFactory.Calculator<M
         Map<String, String> result = Maps.newHashMap();
         result.put(AnnotationProcessorInfo.PROCESSOR_KEY, "false");
         result.put(AnnotationProcessorInfo.INCREMENTAL_KEY, "false");
-        result.put(AnnotationProcessorInfo.NAME_KEY, AnnotationProcessorInfo.UNKNOWN_NAME);
+        // Set the cache entry's default name to the dir/jar path, for debugging.
+        // If we discover that this is an annotation processor, we will set it to the class name.
+        result.put(AnnotationProcessorInfo.NAME_KEY, dirOrJar.getPath());
 
         if (fileType == FileType.Directory) {
             File spec = new File(dirOrJar, "META-INF/services/javax.annotation.processing.Processor");
-            if (new File(dirOrJar, META_INF_INCAP).isFile()) {
-                setIncremental(result);
-            }
             if (spec.isFile()) {
                 markAsProcessor(result);
                 scanFile(spec, result);
+                if (new File(dirOrJar, META_INF_INCAP).isFile()) {
+                    setIncremental(result);
+                }
             }
             return result;
         }
@@ -82,9 +84,9 @@ class AnnotationProcessorScanner implements FileContentCacheFactory.Calculator<M
                     if (entry != null) {
                         markAsProcessor(result);
                         scanZipEntry(zipFile, entry, result);
-                    }
-                    if (zipFile.getEntry(META_INF_INCAP) != null) {
-                        setIncremental(result);
+                        if (zipFile.getEntry(META_INF_INCAP) != null) {
+                            setIncremental(result);
+                        }
                     }
                 } finally {
                     zipFile.close();
@@ -140,11 +142,19 @@ class AnnotationProcessorScanner implements FileContentCacheFactory.Calculator<M
         return !result.get(AnnotationProcessorInfo.NAME_KEY).equals(AnnotationProcessorInfo.UNKNOWN_NAME);
     }
 
+    private Boolean isProcessor(Map<String, String> result) {
+        return !"true".equals(result.get(AnnotationProcessorInfo.PROCESSOR_KEY));
+    }
+
     private void setIncremental(Map<String, String> result) {
         result.put(AnnotationProcessorInfo.INCREMENTAL_KEY, "true");
     }
 
     private void markAsProcessor(Map<String, String> result) {
         result.put(AnnotationProcessorInfo.PROCESSOR_KEY, "true");
+    }
+
+    private void setName(Map<String, String> result, String name) {
+        result.put(AnnotationProcessorInfo.NAME_KEY, name);
     }
 }
