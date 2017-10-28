@@ -2,11 +2,19 @@
 // Compiler daemon
 sourceCompatibility = 1.6
 
+repositories {
+    maven {
+        url  "https://dl.bintray.com/incap/incap"
+    }
+}
+
 dependencies {
     compile project(":core")
     compile project(":platformJvm")
     compile project(":languageJava")
     compile project(":languageJvm")
+
+    compile 'org.gradle.incap:incap-build-client:0.0.2'
 
     compileOnly libraries.zinc
 }

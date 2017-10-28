@@ -193,6 +193,7 @@ allprojects {
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
         maven { url 'https://repo.gradle.org/gradle/libs-milestones' }
         maven { url "https://repo.gradle.org/gradle/libs-snapshots" }
+        maven { url 'https://dl.bintray.com/incap/incap' }
         //TODO remove this when incap can be published to a repo
         mavenLocal()
     }

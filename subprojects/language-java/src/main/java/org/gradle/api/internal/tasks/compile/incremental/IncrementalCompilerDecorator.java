@@ -123,9 +123,9 @@ public class IncrementalCompilerDecorator {
             return false;
         }
         if (foundProcessors) {
-            LOG.info("All annotation processors are incremental.");
+            LOG.warn("{} - all annotation processors are incremental.", displayName);
         } else {
-            LOG.info("No annotation processors were found.");
+            LOG.warn("{} - no annotation processors were found.", displayName);
         }
         return true;
     }
@@ -140,6 +140,6 @@ public class IncrementalCompilerDecorator {
             sb.append(processor);
             sb.append("\n");
         }
-        LOG.info(sb.toString().trim());
+        LOG.warn(sb.toString().trim());
     }
 }
