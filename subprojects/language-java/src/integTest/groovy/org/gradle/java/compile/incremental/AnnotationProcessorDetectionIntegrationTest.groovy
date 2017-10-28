@@ -296,4 +296,15 @@ class AnnotationProcessorDetectionIntegrationTest extends AbstractIntegrationSpe
         }
         """
     }
+
+    // TODO:  This is copied from CompileAvoidanceWithIncrementalJavaCompilationIntegrationTest.groovy.
+    private void subproject(String name, @DelegatesTo(value=FileTreeBuilder, strategy = Closure.DELEGATE_FIRST) Closure<Void> config) {
+        file("settings.gradle") << "include '$name'\n"
+        def subprojectDir = file(name)
+        subprojectDir.mkdirs()
+        FileTreeBuilder builder = new FileTreeBuilder(subprojectDir)
+        config.setDelegate(builder)
+        config.resolveStrategy = Closure.DELEGATE_FIRST
+        config.call()
+    }
 }
