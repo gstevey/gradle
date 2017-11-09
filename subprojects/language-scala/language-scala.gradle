@@ -2,19 +2,22 @@
 // Compiler daemon
 sourceCompatibility = 1.6
 
+repositories {
+    maven {
+        url  "https://dl.bintray.com/incap/incap"
+    }
+}
+
 dependencies {
     compile project(":core")
     compile project(":platformJvm")
     compile project(":languageJava")
     compile project(":languageJvm")
 
+    compile 'org.gradle.incap:incap-build-client:0.0.2'
+
     compileOnly libraries.zinc
 }
-
-// jitpack seems to put incap test projects on the classpath,
-// which results in "no annotation processor claimed these" errors.
-// To get things compiling.
-compileJava.options.annotationProcessorPath = project.files()
 
 strictCompile()
 useTestFixtures()

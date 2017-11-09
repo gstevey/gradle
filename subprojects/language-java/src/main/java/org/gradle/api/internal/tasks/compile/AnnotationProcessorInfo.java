@@ -38,22 +38,27 @@ public class AnnotationProcessorInfo {
      * True if the annotation processor adheres to the INCAP incremental AP spec.
      */
     public boolean isIncrementalEnabled() {
-        String value = properties.get(INCREMENTAL_KEY);
-        return value == null ? false : Boolean.valueOf(value);
+        return properties == null ? false : Boolean.valueOf(properties.get(INCREMENTAL_KEY));
     }
 
     /**
      * Returns a user-presentable name for the processor.
      */
     public String getName() {
-        return properties.get(NAME_KEY);
+        return properties == null ? null : properties.get(NAME_KEY);
     }
 
     /**
      * Returns true if processor services were found in this file.
      */
     public boolean isProcessor() {
-        String value = properties.get(PROCESSOR_KEY);
-        return value == null ? false : Boolean.valueOf(value);
+        return properties == null ? false : Boolean.valueOf(properties.get(PROCESSOR_KEY));
+    }
+
+    @Override
+    public String toString() {
+        return "AnnotationProcessorInfo{processor=" + isProcessor() +
+            ", name=" + getName() +
+            ", incremental=" + isIncrementalEnabled() + "}";
     }
 }

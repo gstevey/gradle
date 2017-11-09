@@ -16,11 +16,19 @@
 // Test execution
 sourceCompatibility = 1.6
 
+repositories {
+    maven {
+        url  "https://dl.bintray.com/incap/incap"
+    }
+}
+
 dependencies {
     compile project(':core')
     compile project(':platformJvm')
     compile project(':languageJava')
     compile project(':testingBase')
+
+    compile 'org.gradle.incap:incap-build-client:0.0.2'
 
     compile libraries.junit
     compile libraries.kryo
